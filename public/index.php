@@ -11,6 +11,14 @@
 |
 */
 
+// $connection = pg_connect("host=postgres port=5432 dbname=postgres user=user password=password");
+
+// if ($connection) {
+//     echo 'connected';
+// } else {
+//     echo 'there has been an error connecting';
+// }
+
 $app = require __DIR__.'/../bootstrap/app.php';
 
 /*
