@@ -13,6 +13,10 @@
 |
 */
 
+use App\Http\Controllers\HealthCheckController;
+
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
+
+$router->get('/health-check', HealthCheckController::class . '@check');

@@ -59,6 +59,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install extensions
 RUN docker-php-ext-install zip exif pcntl pdo_pgsql  pgsql
+RUN pecl install xdebug && docker-php-ext-enable xdebug
 # RUN docker-php-ext-configure gd --with-gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/
 # RUN docker-php-ext-install gd
 
@@ -80,3 +81,5 @@ RUN chown -R www /var/www
 
 # Change current user to www
 USER www
+
+EXPOSE 9000
