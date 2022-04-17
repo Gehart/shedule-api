@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Entities\Post;
+use Doctrine\ORM\EntityManagerInterface;
 use Illuminate\Http\Request;
 
 class HealthCheckController extends Controller
@@ -18,22 +20,24 @@ class HealthCheckController extends Controller
 
     /**
      * @param Request $request
-     * @return string
+     * @param EntityManagerInterface $entityManager
      */
-    public function check(Request $request): string
+    public function check(Request $request, EntityManagerInterface $entityManager)
     {
-//        phpinfo();
         $a = 4;
         $b = $a;
-        var_dump($b);
-//        return ["blabla"];
-//        return sprintf('xDebug does%s exists.', extension_loaded('xdebug') ? '' : "n't");
-         $connection = pg_connect("host=postgres port=5432 dbname=postgres user=user password=password");
+//        var_dump($b);
+//        $connection = pg_connect("host=postgres port=5432 dbname=postgres user=user password=password");
 
-        if ($connection) {
-            return 'connected to postgresql';
-        } else {
-            return 'there has been an error connecting';
-        }
+        $post = new Post('test', 'it is a test');
+        $entityManager->persist($post);
+        $entityManager->flush();
+
+
+//        if ($connection) {
+//            return 'connected to postgresql';
+//        } else {
+//            return 'there has been an error connecting';
+//        }
     }
 }
