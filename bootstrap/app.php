@@ -107,6 +107,8 @@ $app->register(LaravelDoctrine\ORM\DoctrineServiceProvider::class);
 |
 */
 
+define("ROOT_DIR", env('ROOT_DIR'));
+
 $app->router->group([], function ($router) {
     require __DIR__.'/../routes/api.php';
 });

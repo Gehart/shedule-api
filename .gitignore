@@ -5,5 +5,8 @@ Homestead.yaml
 .env
 .phpunit.result.cache
 .directory
-/docker/postgres
 /xdebug.log
+!/docker/postgres/.gitkeep
+/docker/postgres
+/storage/files/*
+!/storage/files/.gitkeep
