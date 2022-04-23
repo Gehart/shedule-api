@@ -36,5 +36,6 @@ class LoadScheduleFileCommand extends Command
         } catch (\Throwable $e) {
             $this->error($e->getMessage());
         }
+        $this->info('Command finished!');
     }
 }

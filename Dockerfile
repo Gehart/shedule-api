@@ -18,7 +18,9 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libzip-dev \
-    libpq-dev
+    libpq-dev \
+    libjpeg-dev \
+    libfreetype6-dev
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -58,7 +60,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 #     zip
 
 # Install extensions
-RUN docker-php-ext-install zip exif pcntl pdo_pgsql  pgsql
+RUN docker-php-ext-install zip exif pcntl pdo_pgsql  pgsql gd
 RUN pecl install xdebug && docker-php-ext-enable xdebug
 # RUN docker-php-ext-configure gd --with-gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/
 # RUN docker-php-ext-install gd
