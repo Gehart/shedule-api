@@ -4,7 +4,7 @@ namespace App\Http\Request;
 
 use Illuminate\Http\Request;
 
-class BaseRequest extends Request
+class StandardRequest extends Request
 {
 
 }

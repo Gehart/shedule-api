@@ -91,7 +91,7 @@ $app->configure('app');
 |
 */
 
-// $app->register(App\Providers\AppServiceProvider::class);
+ $app->register(App\Providers\AppServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
 $app->register(LaravelDoctrine\ORM\DoctrineServiceProvider::class);
@@ -107,7 +107,7 @@ $app->register(LaravelDoctrine\ORM\DoctrineServiceProvider::class);
 |
 */
 
-define("ROOT_DIR", env('ROOT_DIR'));
+const ROOT_DIR = __DIR__ . '/../';
 
 $app->router->group([], function ($router) {
     require __DIR__.'/../routes/api.php';

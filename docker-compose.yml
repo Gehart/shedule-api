@@ -23,6 +23,8 @@ services:
 #      - "9110:9110"
     depends_on:
       - postgres
+    environment:
+      PHP_IDE_CONFIG: "serverName=appserver"
     networks:
       - app-network
 
