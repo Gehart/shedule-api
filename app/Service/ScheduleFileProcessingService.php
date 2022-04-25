@@ -6,6 +6,7 @@ use App\Exceptions\Processing\NotFoundFileException;
 use App\Infrastructure\FilesystemAdapter;
 use App\Service\Schedule\ScheduleByWeekStrategyService;
 use App\Service\Schedule\ScheduleGettingServiceFactory;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ScheduleFileProcessingService
@@ -27,11 +28,13 @@ class ScheduleFileProcessingService
             throw new NotFoundFileException();
         }
 
+        Log::notice('Start to load a file');
         $reader = IOFactory::createReaderForFile($filepath);
         $spreadsheet = $reader->load($filepath);
 
         $scheduleGettingService = $this->scheduleGettingServiceFactory->getByStrategy(ScheduleByWeekStrategyService::STRATEGY_NAME);
         $scheduleGettingService->getSchedule($spreadsheet);
+
 
 
     }

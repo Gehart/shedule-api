@@ -1,5 +1,7 @@
 <?php
 
+use Monolog\Handler\StreamHandler;
+
 require_once __DIR__.'/../vendor/autoload.php';
 
 (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
@@ -23,7 +25,7 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-// $app->withFacades();
+//$app->withFacades();
 
 // $app->withEloquent();
 
@@ -97,13 +99,6 @@ $app->register(App\Providers\AppServiceProvider::class);
 $app->register(LaravelDoctrine\ORM\DoctrineServiceProvider::class);
 
 
-$app->configureMonologUsing(function($monolog) {
-    $monolog->pushHandler(...);
-
-    return $monolog;
-});
-
-return $app;
 
 /*
 |--------------------------------------------------------------------------
