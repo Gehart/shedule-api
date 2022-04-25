@@ -4,12 +4,15 @@ namespace App\Service;
 
 use App\Exceptions\Processing\NotFoundFileException;
 use App\Infrastructure\FilesystemAdapter;
+use App\Service\Schedule\ScheduleByWeekStrategyService;
+use App\Service\Schedule\ScheduleGettingServiceFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ScheduleFileProcessingService
 {
     public function __construct(
         private FilesystemAdapter $filesystemAdapter,
+        private ScheduleGettingServiceFactory $scheduleGettingServiceFactory,
     ) {
     }
 
@@ -26,9 +29,10 @@ class ScheduleFileProcessingService
 
         $reader = IOFactory::createReaderForFile($filepath);
         $spreadsheet = $reader->load($filepath);
-        $worksheets = $spreadsheet->getAllSheets();
-        foreach ($worksheets as $worksheet) {
-            $mergeCells = $worksheet->getMergeCells();
-        }
+
+        $scheduleGettingService = $this->scheduleGettingServiceFactory->getByStrategy(ScheduleByWeekStrategyService::STRATEGY_NAME);
+        $scheduleGettingService->getSchedule($spreadsheet);
+
+
     }
 }
