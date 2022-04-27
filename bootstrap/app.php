@@ -25,7 +25,7 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-//$app->withFacades();
+$app->withFacades();
 
 // $app->withEloquent();
 
@@ -111,7 +111,6 @@ $app->register(LaravelDoctrine\ORM\DoctrineServiceProvider::class);
 |
 */
 
-const ROOT_DIR = __DIR__ . '/../';
 
 $app->router->group([], function ($router) {
     require __DIR__.'/../routes/api.php';

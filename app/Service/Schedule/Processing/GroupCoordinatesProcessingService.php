@@ -3,6 +3,7 @@
 namespace App\Service\Schedule\Processing;
 
 use App\Service\Schedule\Exception\CannotFindFirstGroupNameException;
+use App\Service\Schedule\Processing\Dto\GroupCoordinatesDto;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception;
@@ -18,7 +19,7 @@ class GroupCoordinatesProcessingService
 
     /**
      * @param Worksheet $worksheet
-     * @return array
+     * @return array<GroupCoordinatesDto>
      * @throws CannotFindFirstGroupNameException
      * @throws Exception
      */
@@ -83,7 +84,7 @@ class GroupCoordinatesProcessingService
     /**
      * @param Worksheet $worksheet
      * @param string $firstGroupNameCoordinates
-     * @return array
+     * @return array<GroupCoordinatesDto>
      * @throws Exception
      */
     private function findGroups(Worksheet $worksheet, string $firstGroupNameCoordinates): array
@@ -100,7 +101,7 @@ class GroupCoordinatesProcessingService
             $cell = $worksheet->getCell($coordinate);
             $cellValue = trim($cell->getFormattedValue());
             if (preg_match(self::GROUP_NAME_REGEX, $cellValue)) {
-                $groups[] = [$cellValue, $coordinate];
+                $groups[] = new GroupCoordinatesDto($cellValue, $coordinate);
             }
         }
 
