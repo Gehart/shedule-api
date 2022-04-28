@@ -34,7 +34,8 @@ class LoadScheduleFileCommand extends Command
         try {
             $this->scheduleFileProcessingService->getScheduleFromFile($filepath);
         } catch (\Throwable $e) {
-            $this->error($e->getMessage());
+            $this->error('Error');
+            $this->warn($e->getMessage());
         }
         $this->info('Command finished!');
     }

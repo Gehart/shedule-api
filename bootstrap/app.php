@@ -1,7 +1,5 @@
 <?php
 
-use Monolog\Handler\StreamHandler;
-
 require_once __DIR__.'/../vendor/autoload.php';
 
 (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
@@ -61,7 +59,14 @@ $app->singleton(
 |
 */
 
-$app->configure('app');
+$configFiles = [
+    'app',
+    'dictionary',
+];
+
+foreach ($configFiles as $file) {
+    $app->configure($file);
+}
 
 /*
 |--------------------------------------------------------------------------

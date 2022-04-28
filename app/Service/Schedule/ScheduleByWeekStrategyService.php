@@ -2,16 +2,15 @@
 
 namespace App\Service\Schedule;
 
-use App\Service\Schedule\Exception\CannotFindDayException;
 use App\Service\Schedule\Exception\CannotFindFirstGroupNameException;
+use App\Service\Schedule\Processing\DayName\DayGettingService;
 use App\Service\Schedule\Processing\Dto\GroupCoordinatesDto;
 use App\Service\Schedule\Processing\GroupCoordinatesProcessingService;
+use App\Service\Schedule\Processing\Utils\ProcessingUtils;
 use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
 {
@@ -21,7 +20,9 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
     public const FIRST_COLUMN_LETTER = 'A';
 
     public function __construct(
-        private GroupCoordinatesProcessingService $groupProcessingService
+        private GroupCoordinatesProcessingService $groupProcessingService,
+        private ProcessingUtils $processingUtils,
+        private DayGettingService $dayGettingService,
     ) {
     }
 
@@ -61,8 +62,8 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
 
         foreach ($rows as $row) {
             $rowIndex = $row->getRowIndex();
-            $dayName =  $this->findDayName($worksheet, $columnOfGroup, $rowIndex);
-            $dayNameRange = $dayName['dayCellRange'];
+            $dayName =  $this->dayGettingService->findDayName($worksheet, $columnOfGroup, $rowIndex);
+//            $dayNameRange = $dayName['dayCellRange'];
         }
 
         return 'something';
@@ -88,73 +89,10 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
     }
 
     /**
-     * @param Worksheet $worksheet
-     * @param string $columnOfGroup
-     * @param int $rowIndex
-     * @return array|null
-     * @throws Exception
-     * @throws CannotFindDayException
+     * @return ProcessingUtils
      */
-    public function findDayName(Worksheet $worksheet, string $columnOfGroup, int $rowIndex): ?array
+    public function getProcessingUtils(): ProcessingUtils
     {
-        $dayNameCell = null;
-
-        $columnIterator = $worksheet->getColumnIterator(self::FIRST_COLUMN_LETTER, $columnOfGroup);
-        $columnIterator->seek($columnOfGroup);
-
-        while ($columnIterator->valid()) {
-            $currentColumn = $columnIterator->current();
-            $columnIndex = $currentColumn->getColumnIndex();
-            $currentCoordinates = $columnIndex . $rowIndex;
-            $currentCell = $worksheet->getCell($currentCoordinates);
-
-            $cellValue = $this->getCellValueWithinRange($worksheet, $currentCell);
-
-            if (mb_strtolower($cellValue) === mb_strtolower('Понедельник')) {
-                Log::info('Cool!', [
-                    'day_name' => $cellValue,
-                    'current coordinate' => $currentCoordinates,
-                ]);
-                $dayNameCell = $currentCell;
-                break;
-            }
-            $columnIterator->prev();
-        }
-
-        if ($dayNameCell) {
-            $dayNameRange = $dayNameCell->getMergeRange();
-
-            if (!$dayNameRange) {
-                Log::warning('Look like the day name cell is incorrect!');
-            }
-
-            return [
-                'dayName' => $dayNameCell->getFormattedValue(),
-                'dayCellRange' => $dayNameRange,
-            ];
-        } else {
-            throw new CannotFindDayException();
-        }
-    }
-
-    /**
-     * @param Worksheet $worksheet
-     * @param Cell $cell
-     * @return string
-     */
-    public function getCellValueWithinRange(Worksheet $worksheet, Cell $cell): string
-    {
-        $mergeRange = $cell->getMergeRange();
-
-        if ($mergeRange) {
-            $splitRange = Coordinate::splitRange($mergeRange);
-            [$startCell] = $splitRange[0];
-            $leftTopCell = $worksheet->getCell($startCell);
-            $leftTopCellValue = $leftTopCell->getFormattedValue();
-        } else {
-            $leftTopCellValue = $cell->getFormattedValue();
-        }
-
-        return $leftTopCellValue;
+        return $this->processingUtils;
     }
 }
