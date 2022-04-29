@@ -7,11 +7,14 @@ use App\Service\Schedule\Exception\CannotFindDayException;
 use App\Service\Schedule\Processing\Utils\ProcessingUtils;
 use App\Service\Schedule\ScheduleByWeekStrategyService;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class DayGettingService
 {
+    private array $dayNameData = [];
+
     public function __construct(
         private ProcessingUtils $utils,
         private ScheduleDictionary $scheduleDictionary,
@@ -29,6 +32,7 @@ class DayGettingService
     public function findDayName(Worksheet $worksheet, string $columnOfGroup, int $rowIndex): ?array
     {
         $dayNameCell = null;
+        $currentCoordinates = null;
 
         $columnIterator = $worksheet->getColumnIterator(ScheduleByWeekStrategyService::FIRST_COLUMN_LETTER, $columnOfGroup);
         $columnIterator->seek($columnOfGroup);
@@ -41,13 +45,8 @@ class DayGettingService
 
             $cellValue = $this->utils->getCellValueWithinRange($worksheet, $currentCell);
 
-
-//           /*
-//  Если в словаре, то сохранить (пройти по всем словарям и все в таком духе)
-//
-//
-//*/
-            if (mb_strtolower($cellValue) === mb_strtolower('Понедельник')) {
+            $day= $this->getDayByCellValue($cellValue);
+            if ($day !== null) {
                 Log::info('Cool!', [
                     'day_name' => $cellValue,
                     'current coordinate' => $currentCoordinates,
@@ -70,7 +69,36 @@ class DayGettingService
                 'dayCellRange' => $dayNameRange,
             ];
         } else {
-            throw new CannotFindDayException();
+            throw new CannotFindDayException($currentCoordinates);
+        }
+    }
+
+    /**
+     * @param string $cellValue
+     * @return array|null
+     */
+    private function getDayByCellValue(string $cellValue): ?array
+    {
+        if (!$this->dayNameData) {
+            $this->dayNameData = $this->scheduleDictionary->getDayNameData();
+        }
+        $dayNumber = null;
+
+        foreach ($this->dayNameData as $dayKey => $dayData) {
+            foreach ($dayData['names'] as $dayName) {
+                if (mb_strtolower($cellValue) === mb_strtolower($dayName)) {
+                    $dayNumber = $dayData['numberOfDay'];
+                    break;
+                }
+            }
+        }
+
+        if ($dayNumber !== null) {
+            return [
+                'number' => $dayNumber,
+            ];
+        } else {
+            return null;
         }
     }
 }

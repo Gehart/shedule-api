@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Exceptions\ExceptionWithContextInterface;
 use App\Service\ScheduleFileProcessingService;
 use Illuminate\Console\Command;
 
@@ -35,7 +36,12 @@ class LoadScheduleFileCommand extends Command
             $this->scheduleFileProcessingService->getScheduleFromFile($filepath);
         } catch (\Throwable $e) {
             $this->error('Error');
-            $this->warn($e->getMessage());
+            $this->warn($e);
+            if ($e instanceof ExceptionWithContextInterface) {
+                $this->warn('Context' . json_encode([
+                        'context' => $e->getContext(),
+                    ]) );
+            }
         }
         $this->info('Command finished!');
     }

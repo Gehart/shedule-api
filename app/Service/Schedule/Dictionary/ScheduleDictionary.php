@@ -14,8 +14,19 @@ class ScheduleDictionary
         $this->dictionaryData = $dictionaryData;
     }
 
+    /**
+     * @return array
+     */
     public function getData(): array
     {
         return $this->dictionaryData;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDayNameData(): array
+    {
+        return $this->dictionaryData['dayNames'] ?: [];
     }
 }
