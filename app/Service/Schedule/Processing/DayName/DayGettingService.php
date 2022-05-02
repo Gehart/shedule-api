@@ -2,8 +2,11 @@
 
 namespace App\Service\Schedule\Processing\DayName;
 
+use App\Entities\Day;
 use App\Service\Schedule\Dictionary\ScheduleDictionary;
 use App\Service\Schedule\Exception\CannotFindDayException;
+use App\Service\Schedule\Processing\DayName\Assembler\DayAssembler;
+use App\Service\Schedule\Processing\DayName\Dto\DayCellDto;
 use App\Service\Schedule\Processing\Utils\ProcessingUtils;
 use App\Service\Schedule\ScheduleByWeekStrategyService;
 use Illuminate\Support\Facades\Log;
@@ -13,11 +16,13 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class DayGettingService
 {
+
     private array $dayNameData = [];
 
     public function __construct(
         private ProcessingUtils $utils,
         private ScheduleDictionary $scheduleDictionary,
+        private DayAssembler $dayAssembler,
     ) {
     }
 
@@ -25,14 +30,15 @@ class DayGettingService
      * @param Worksheet $worksheet
      * @param string $columnOfGroup
      * @param int $rowIndex
-     * @return array|null
+     * @return DayCellDto
      * @throws Exception
      * @throws CannotFindDayException
      */
-    public function findDayName(Worksheet $worksheet, string $columnOfGroup, int $rowIndex): ?array
+    public function findDay(Worksheet $worksheet, string $columnOfGroup, int $rowIndex): DayCellDto
     {
         $dayNameCell = null;
         $currentCoordinates = null;
+        $day = null;
 
         $columnIterator = $worksheet->getColumnIterator(ScheduleByWeekStrategyService::FIRST_COLUMN_LETTER, $columnOfGroup);
         $columnIterator->seek($columnOfGroup);
@@ -45,7 +51,7 @@ class DayGettingService
 
             $cellValue = $this->utils->getCellValueWithinRange($worksheet, $currentCell);
 
-            $day= $this->getDayByCellValue($cellValue);
+            $day = $this->getDayByCellValue($cellValue);
             if ($day !== null) {
                 Log::info('Cool!', [
                     'day_name' => $cellValue,
@@ -57,17 +63,14 @@ class DayGettingService
             $columnIterator->prev();
         }
 
-        if ($dayNameCell) {
+        if ($day) {
             $dayNameRange = $dayNameCell->getMergeRange();
 
             if (!$dayNameRange) {
                 Log::warning('Look like the day name cell is incorrect!');
             }
 
-            return [
-                'dayName' => $dayNameCell->getFormattedValue(),
-                'dayCellRange' => $dayNameRange,
-            ];
+            return new DayCellDto($day, $dayNameRange);
         } else {
             throw new CannotFindDayException($currentCoordinates);
         }
@@ -75,9 +78,9 @@ class DayGettingService
 
     /**
      * @param string $cellValue
-     * @return array|null
+     * @return Day|null
      */
-    private function getDayByCellValue(string $cellValue): ?array
+    private function getDayByCellValue(string $cellValue): ?Day
     {
         if (!$this->dayNameData) {
             $this->dayNameData = $this->scheduleDictionary->getDayNameData();
@@ -94,9 +97,7 @@ class DayGettingService
         }
 
         if ($dayNumber !== null) {
-            return [
-                'number' => $dayNumber,
-            ];
+            return $this->dayAssembler->create($dayNumber);
         } else {
             return null;
         }

@@ -2,6 +2,8 @@
 
 namespace App\Service\Schedule;
 
+use App\Entities\Day;
+use App\Service\Schedule\Exception\CannotFindDayException;
 use App\Service\Schedule\Exception\CannotFindFirstGroupNameException;
 use App\Service\Schedule\Processing\DayName\DayGettingService;
 use App\Service\Schedule\Processing\Dto\GroupCoordinatesDto;
@@ -30,6 +32,7 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
     /**
      * @throws CannotFindFirstGroupNameException
      * @throws Exception
+     * @throws CannotFindDayException
      */
     public function getSchedule(Spreadsheet $spreadsheet): mixed
     {
@@ -52,21 +55,54 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
 //
 //        }
 
-        $group = $groupsOnAWorksheet[0];
+        $group = $groupsOnAWorksheet[1];
         [$columnOfGroup, $rowOfGroup] = Coordinate::coordinateFromString($group->getCoordinate());
 
         $rows = $worksheet->getRowIterator($rowOfGroup + 1, $worksheet->getHighestRow());
 
         // https://stackoverflow.com/questions/37027277/decrement-character-with-php
 //        $columnIndexResult = chr(ord($columnIndexResult) - 1);
-
+        $currentDayDto = null;
+        $processedDays = [];
         foreach ($rows as $row) {
             $rowIndex = $row->getRowIndex();
-            $dayName =  $this->dayGettingService->findDayName($worksheet, $columnOfGroup, $rowIndex);
-//            $dayNameRange = $dayName['dayCellRange'];
+
+            if ($currentDayDto === null) {
+                $dayDto =  $this->dayGettingService->findDay($worksheet, $columnOfGroup, $rowIndex);
+                $currentDayDto = $dayDto;
+                $processedDays[] = $dayDto;
+            } else {
+                $currentRowInDayRange = $this->currentRowInDayRange($currentDayDto->getCellRange(), $rowIndex);
+                if (!$currentRowInDayRange) {
+                    if ($currentDayDto->getDay()->getNumber() === Day::SATURDAY) {
+                        Log::info('Finish to process group');
+                        break;
+                    }
+
+                    $dayDto =  $this->dayGettingService->findDay($worksheet, $columnOfGroup, $rowIndex);
+                    $currentDayDto = $dayDto;
+                    $processedDays[] = $dayDto;
+                }
+            }
+
+
         }
 
+
         return 'something';
+    }
+
+    /**
+     * @param string $dayRange
+     * @param int $rowIndex
+     * @return bool
+     */
+    private function currentRowInDayRange(string $dayRange, int $rowIndex): bool
+    {
+        [$startCoordinates, $endCoordinates] = Coordinate::getRangeBoundaries($dayRange);
+        $lowRow = (int) $startCoordinates[1];
+        $highRow = (int) $endCoordinates[1];
+        return $rowIndex >= $lowRow && $rowIndex <= $highRow;
     }
 
     /**

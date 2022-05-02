@@ -8,23 +8,23 @@ return [
         ],
         'tuesday' => [
             'names' => ['Вторник'],
-            'numberOfDay' => 1,
+            'numberOfDay' => 2,
         ],
         'wednesday' => [
             'names' => ['Среда'],
-            'numberOfDay' => 1,
+            'numberOfDay' => 3,
         ],
         'thursday' => [
             'names' => ['Четверг'],
-            'numberOfDay' => 1,
+            'numberOfDay' => 4,
         ],
         'friday' => [
             'names' => ['Пятница'],
-            'numberOfDay' => 1,
+            'numberOfDay' => 5,
         ],
         'saturday' => [
             'names' => ['Суббота'],
-            'numberOfDay' => 1,
+            'numberOfDay' => 6,
         ],
     ]
 ];
