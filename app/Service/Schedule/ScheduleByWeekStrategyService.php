@@ -3,9 +3,11 @@
 namespace App\Service\Schedule;
 
 use App\Entities\Day;
+use App\Entities\Lesson;
 use App\Service\Schedule\Exception\CannotFindDayException;
 use App\Service\Schedule\Exception\CannotFindFirstGroupNameException;
 use App\Service\Schedule\Processing\DayName\DayGettingService;
+use App\Service\Schedule\Processing\DayName\Dto\DayCellDto;
 use App\Service\Schedule\Processing\Dto\GroupCoordinatesDto;
 use App\Service\Schedule\Processing\GroupCoordinatesProcessingService;
 use App\Service\Schedule\Processing\Utils\ProcessingUtils;
@@ -13,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
 {
@@ -25,6 +28,8 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
         private GroupCoordinatesProcessingService $groupProcessingService,
         private ProcessingUtils $processingUtils,
         private DayGettingService $dayGettingService,
+        private ProcessingUtils $utils,
+        private LessonGettingService $lessonGettingService,
     ) {
     }
 
@@ -55,7 +60,7 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
 //
 //        }
 
-        $group = $groupsOnAWorksheet[1];
+        $group = $groupsOnAWorksheet[0];
         [$columnOfGroup, $rowOfGroup] = Coordinate::coordinateFromString($group->getCoordinate());
 
         $rows = $worksheet->getRowIterator($rowOfGroup + 1, $worksheet->getHighestRow());
@@ -64,30 +69,21 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
 //        $columnIndexResult = chr(ord($columnIndexResult) - 1);
         $currentDayDto = null;
         $processedDays = [];
+        $lessons = [];
         foreach ($rows as $row) {
             $rowIndex = $row->getRowIndex();
 
-            if ($currentDayDto === null) {
-                $dayDto =  $this->dayGettingService->findDay($worksheet, $columnOfGroup, $rowIndex);
-                $currentDayDto = $dayDto;
-                $processedDays[] = $dayDto;
-            } else {
-                $currentRowInDayRange = $this->currentRowInDayRange($currentDayDto->getCellRange(), $rowIndex);
-                if (!$currentRowInDayRange) {
-                    if ($currentDayDto->getDay()->getNumber() === Day::SATURDAY) {
-                        Log::info('Finish to process group');
-                        break;
-                    }
-
-                    $dayDto =  $this->dayGettingService->findDay($worksheet, $columnOfGroup, $rowIndex);
-                    $currentDayDto = $dayDto;
-                    $processedDays[] = $dayDto;
-                }
+            $currentDayDto = $this->getCurrentDay($worksheet, $columnOfGroup, $rowIndex, $currentDayDto);
+            if (!$currentDayDto) {
+                break;
             }
 
 
+            $lesson = $this->lessonGettingService->getLesson($worksheet, $columnOfGroup, $rowIndex, $group);
+            if ($lesson) {
+                $lessons[] = $lesson;
+            }
         }
-
 
         return 'something';
     }
@@ -125,10 +121,32 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
     }
 
     /**
-     * @return ProcessingUtils
+     * @param Worksheet $worksheet
+     * @param mixed $columnOfGroup
+     * @param int $rowIndex
+     * @param DayCellDto|null $currentDayDto
+     * @return DayCellDto|null
+     * @throws CannotFindDayException
+     * @throws Exception
      */
-    public function getProcessingUtils(): ProcessingUtils
+    public function getCurrentDay(Worksheet $worksheet, mixed $columnOfGroup, int $rowIndex, ?DayCellDto $currentDayDto): ?DayCellDto
     {
-        return $this->processingUtils;
+        $dayDto = null;
+        if ($currentDayDto === null) {
+            $dayDto = $this->dayGettingService->findDay($worksheet, $columnOfGroup, $rowIndex);
+        } else {
+            $currentRowInDayRange = $this->currentRowInDayRange($currentDayDto->getCellRange(), $rowIndex);
+            if (!$currentRowInDayRange) {
+                if ($currentDayDto->getDay()->getNumber() === Day::SATURDAY) {
+                    Log::info('Finish to process group');
+                    return null;
+                }
+
+                $dayDto = $this->dayGettingService->findDay($worksheet, $columnOfGroup, $rowIndex);
+            } else {
+                $dayDto = $currentDayDto;
+            }
+        }
+        return $dayDto;
     }
 }

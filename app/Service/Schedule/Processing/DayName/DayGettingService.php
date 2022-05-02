@@ -10,13 +10,14 @@ use App\Service\Schedule\Processing\DayName\Dto\DayCellDto;
 use App\Service\Schedule\Processing\Utils\ProcessingUtils;
 use App\Service\Schedule\ScheduleByWeekStrategyService;
 use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class DayGettingService
 {
-
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     private array $dayNameData = [];
 
     public function __construct(

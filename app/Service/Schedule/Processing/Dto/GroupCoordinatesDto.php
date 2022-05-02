@@ -7,7 +7,16 @@ class GroupCoordinatesDto
     public function __construct(
         readonly private string $groupName,
         readonly private string $coordinate,
+        readonly private string $groupRange,
     ) {
+    }
+
+    /**
+     * @return string
+     */
+    public function getGroupRange(): string
+    {
+        return $this->groupRange;
     }
 
     /**

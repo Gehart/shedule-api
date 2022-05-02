@@ -100,8 +100,11 @@ class GroupCoordinatesProcessingService
             $coordinate = $columnIndex . $rowOfFirstGroup;
             $cell = $worksheet->getCell($coordinate);
             $cellValue = trim($cell->getFormattedValue());
+
+            $groupRange = $cell->getMergeRange() ?: null;
+
             if (preg_match(self::GROUP_NAME_REGEX, $cellValue)) {
-                $groups[] = new GroupCoordinatesDto($cellValue, $coordinate);
+                $groups[] = new GroupCoordinatesDto($cellValue, $coordinate, $groupRange);
             }
         }
 
