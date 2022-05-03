@@ -29,4 +29,12 @@ class ScheduleDictionary
     {
         return $this->dictionaryData['dayNames'] ?: [];
     }
+
+    /**
+     * @return array
+     */
+    public function getMilitaryFacultyData(): array
+    {
+        return $this->dictionaryData['militaryFaculty'] ?: [];
+    }
 }

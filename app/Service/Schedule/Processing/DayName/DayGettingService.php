@@ -54,7 +54,7 @@ class DayGettingService
 
             $day = $this->getDayByCellValue($cellValue);
             if ($day !== null) {
-                Log::info('Cool!', [
+                Log::info('Process a day between coordinates', [
                     'day_name' => $cellValue,
                     'current coordinate' => $currentCoordinates,
                 ]);

@@ -3,7 +3,7 @@
 namespace App\Service\Schedule;
 
 use App\Entities\Day;
-use App\Entities\Lesson;
+use App\Service\Schedule\Assembler\LessonAssembler;
 use App\Service\Schedule\Exception\CannotFindDayException;
 use App\Service\Schedule\Exception\CannotFindFirstGroupNameException;
 use App\Service\Schedule\Processing\DayName\DayGettingService;
@@ -26,10 +26,10 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
 
     public function __construct(
         private GroupCoordinatesProcessingService $groupProcessingService,
-        private ProcessingUtils $processingUtils,
         private DayGettingService $dayGettingService,
         private ProcessingUtils $utils,
         private LessonGettingService $lessonGettingService,
+        private LessonAssembler $lessonAssembler,
     ) {
     }
 
@@ -45,47 +45,55 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
 
         $groupsOnAWorksheet = $this->groupProcessingService->findAGroupsCoordinate($worksheet);
         $this->logGroupCoordinates($groupsOnAWorksheet);
+        $lessonsForGroup = [];
 
-        // определять подгруппы.
+        foreach ($groupsOnAWorksheet as $group) {
+            [$columnOfGroup, $rowOfGroup] = Coordinate::coordinateFromString($group->getCoordinate());
 
-        // найти дни
-        /*
-         * column iterator
-         * from now to end
-         * process day by day
-         * currend day range => day
-         * until end
-         * */
-//        foreach ($groupsOnAWorksheet as $group) {
-//
-//        }
+            $rows = $worksheet->getRowIterator($rowOfGroup + 1, $worksheet->getHighestRow());
 
-        $group = $groupsOnAWorksheet[0];
-        [$columnOfGroup, $rowOfGroup] = Coordinate::coordinateFromString($group->getCoordinate());
+            $currentDayDto = null;
+            $lessonsDto = [];
 
-        $rows = $worksheet->getRowIterator($rowOfGroup + 1, $worksheet->getHighestRow());
+            $currentDayCommonLessonFlags = [];
 
-        // https://stackoverflow.com/questions/37027277/decrement-character-with-php
-//        $columnIndexResult = chr(ord($columnIndexResult) - 1);
-        $currentDayDto = null;
-        $processedDays = [];
-        $lessons = [];
-        foreach ($rows as $row) {
-            $rowIndex = $row->getRowIndex();
+            foreach ($rows as $row) {
+                $rowIndex = $row->getRowIndex();
 
-            $currentDayDto = $this->getCurrentDay($worksheet, $columnOfGroup, $rowIndex, $currentDayDto);
-            if (!$currentDayDto) {
-                break;
+                $currentDayDto = $this->getCurrentDay($worksheet, $columnOfGroup, $rowIndex, $currentDayDto);
+                if (!$currentDayDto) {
+                    break;
+                }
+
+                $lessonDto = $this->lessonGettingService->getLessonDto($worksheet, $columnOfGroup, $rowIndex, $group);
+
+
+                if ($lessonDto) {
+                    $isMilitaryFacultyLesson = $lessonDto->getCoursesDto()[0]->isMilitaryFaculty();
+                    if ($isMilitaryFacultyLesson) {
+                        $currentDayKey = $currentDayDto->getDay()->getKey();
+                        if (!isset($currentDayCommonLessonFlags[$currentDayKey])) {
+                            $currentDayCommonLessonFlags[$currentDayKey] = true;
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    $lessonsDto[] = $lessonDto;
+                }
+            }
+
+            $lessons = [];
+            foreach ($lessonsDto as $lessonDto) {
+                $lessons[] = $this->lessonAssembler->create($lessonDto);
             }
 
 
-            $lesson = $this->lessonGettingService->getLesson($worksheet, $columnOfGroup, $rowIndex, $group);
-            if ($lesson) {
-                $lessons[] = $lesson;
-            }
+            $lessonsForGroup[$group->getGroupName()] = $lessons;
+
         }
 
-        return 'something';
+        return $lessonsForGroup;
     }
 
     /**

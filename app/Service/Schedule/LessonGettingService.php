@@ -2,8 +2,9 @@
 
 namespace App\Service\Schedule;
 
-use App\Entities\Course;
-use App\Entities\Lesson;
+use App\Service\Schedule\Dictionary\ScheduleDictionary;
+use App\Service\Schedule\Processing\Dto\CreatingDto\CourseCreateDto;
+use App\Service\Schedule\Processing\Dto\CreatingDto\LessonCreateDto;
 use App\Service\Schedule\Processing\Dto\GroupCoordinatesDto;
 use App\Service\Schedule\Processing\Utils\ProcessingUtils;
 use Illuminate\Support\Facades\Log;
@@ -15,9 +16,13 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class LessonGettingService
 {
     public const SEQUENCE_NUMBER_REGEX = '/\d.?пара/';
+    public const START_TIME_REGEX = '/\d{1,2}:\d{1,2}/';
+    public const TYPE_OF_LESSON_REGEX = '/\w{1,3}/u';
+    public const MAX_CLASSROOM_STRING_LENGTH = 15;
 
     public function __construct(
         private ProcessingUtils $utils,
+        private ScheduleDictionary $dictionary,
     ) {
     }
 
@@ -26,31 +31,53 @@ class LessonGettingService
      * @param string $columnOfGroup
      * @param int $rowIndex
      * @param GroupCoordinatesDto $group
-     * @return Lesson|null
+     * @return LessonCreateDto|null
      * @throws Exception
      */
-    public function getLesson(Worksheet $worksheet, string $columnOfGroup, int $rowIndex, GroupCoordinatesDto $group): ?Lesson
+    public function getLessonDto(Worksheet $worksheet, string $columnOfGroup, int $rowIndex, GroupCoordinatesDto $group): ?LessonCreateDto
     {
-        // shift until hit the group pair and time
-        // get type and classroom on the left
         $courses = $this->getCourses($worksheet, $columnOfGroup, $rowIndex, $group);
         if (count($courses) === 0) {
             return null;
+        }
+
+        $isMilitaryFacultyLesson = $courses[0]->isMilitaryFaculty();
+        if ($isMilitaryFacultyLesson) {
+            return new LessonCreateDto($courses, $isMilitaryFacultyLesson);
         }
 
         [$lessonSequenceNumber, $lessonColumn] = $this->getLessonNumber($worksheet, $columnOfGroup, $rowIndex);
 
         $startTimeColumn = $this->utils->getIncreasedColumnAddress($lessonColumn, 1);
         $startTime = $this->utils->getCellValueByColumnAndRow($worksheet, $startTimeColumn, $rowIndex);
+        if (!preg_match(self::START_TIME_REGEX, $startTime)) {
+            Log::warning('Start time does not match the pattern!', [
+                'startTime' => $startTime,
+                'cell' => $columnOfGroup . $rowIndex,
+            ]);
+        }
 
         $courseEndColumn = $this->getCourseEndColumn($group, $worksheet, $columnOfGroup, $rowIndex);
 
         $typeOfLessonColumn = $this->utils->getIncreasedColumnAddress($courseEndColumn, 1);
         $typeOfLesson = $this->utils->getCellValueByColumnAndRow($worksheet, $typeOfLessonColumn, $rowIndex);
+        if (!preg_match(self::TYPE_OF_LESSON_REGEX, $typeOfLesson)) {
+            Log::warning('Start time does not match the pattern!', [
+                'typeOfLesson' => $typeOfLesson,
+                'cell' => $columnOfGroup . $rowIndex,
+            ]);
+        }
 
         $classroomColumn = $this->utils->getIncreasedColumnAddress($courseEndColumn, 2);
         $classroom = $this->utils->getCellValueByColumnAndRow($worksheet, $classroomColumn, $rowIndex);
-        return new Lesson($courses, $lessonSequenceNumber, $startTime, $typeOfLesson, $classroom);
+        if (strlen($classroom) > self::MAX_CLASSROOM_STRING_LENGTH) {
+            Log::warning('Classroom has quite long string', [
+                'classroom' => $classroom,
+                'cell' => $columnOfGroup . $rowIndex,
+            ]);
+        }
+
+        return new LessonCreateDto($courses, $isMilitaryFacultyLesson, $lessonSequenceNumber, $startTime, $typeOfLesson, $classroom);
 }
 
 /**
@@ -122,7 +149,7 @@ class LessonGettingService
      * @param string $columnOfGroup
      * @param int $rowIndex
      * @param GroupCoordinatesDto $group
-     * @return array<Course>
+     * @return array<CourseCreateDto>
      */
     private function getCourses(Worksheet $worksheet, string $columnOfGroup, int $rowIndex, GroupCoordinatesDto $group): array
     {
@@ -153,11 +180,27 @@ class LessonGettingService
             return [];
         }
 
-        $courses = [];
+        $coursesDto = [];
         foreach ($cellValues as $cellValue) {
-            $courses[] = new Course($cellValue);
+            $isMilitaryFacultyCourse = $this->isMilitaryFacultyCourse($cellValue);
+            $coursesDto[] = new CourseCreateDto($cellValue, $isMilitaryFacultyCourse);
         }
 
-        return $courses;
+        return $coursesDto;
+    }
+
+    /**
+     * @param string $courseRawName
+     * @return bool
+     */
+    private function isMilitaryFacultyCourse(string $courseRawName): bool
+    {
+        $militaryFacultyAliases = $this->dictionary->getMilitaryFacultyData()['aliases'];
+        foreach ($militaryFacultyAliases as $alias) {
+            if (mb_strtolower($alias) === mb_strtolower($courseRawName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

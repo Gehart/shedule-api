@@ -26,5 +26,11 @@ return [
             'names' => ['Суббота'],
             'numberOfDay' => 6,
         ],
+    ],
+    'militaryFaculty' => [
+        'aliases'  => [
+            'Военно-учебный центр',
+            'Военная кафедра',
+        ]
     ]
 ];

@@ -16,7 +16,19 @@ class ProcessingUtils
      */
     public function getCellValueWithinRange(Worksheet $worksheet, Cell $cell): string
     {
-        $mergeRange = $cell->getMergeRange();
+        if ($cell->getParent() === null) {
+            return '';
+        }
+
+        $mergeRange = null;
+        foreach ($worksheet->getMergeCells() as $range) {
+            if ($cell->isInRange($range)) {
+                $mergeRange = $range;
+            }
+        }
+
+        $mergeRange2 = $cell->getMergeRange();
+
 
         if ($mergeRange) {
             $splitRange = Coordinate::splitRange($mergeRange);
