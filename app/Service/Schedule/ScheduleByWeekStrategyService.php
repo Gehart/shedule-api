@@ -88,9 +88,7 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
                 $lessons[] = $this->lessonAssembler->create($lessonDto);
             }
 
-
             $lessonsForGroup[$group->getGroupName()] = $lessons;
-
         }
 
         return $lessonsForGroup;

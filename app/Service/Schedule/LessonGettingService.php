@@ -15,10 +15,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class LessonGettingService
 {
-    public const SEQUENCE_NUMBER_REGEX = '/\d.?пара/';
-    public const START_TIME_REGEX = '/\d{1,2}:\d{1,2}/';
-    public const TYPE_OF_LESSON_REGEX = '/\w{1,3}/u';
-    public const MAX_CLASSROOM_STRING_LENGTH = 15;
+    public const SEQUENCE_NUMBER_REGEX = '/\d.?пара/',
+        START_TIME_REGEX = '/\d{1,2}:\d{1,2}/',
+        TYPE_OF_LESSON_REGEX = '/\w{1,3}/u',
+        MAX_CLASSROOM_STRING_LENGTH = 15,
+        FIO_REGEX = '/\w{3,}\s\w\.\s?\w\./u';
+
 
     public function __construct(
         private ProcessingUtils $utils,
@@ -181,9 +183,23 @@ class LessonGettingService
         }
 
         $coursesDto = [];
-        foreach ($cellValues as $cellValue) {
-            $isMilitaryFacultyCourse = $this->isMilitaryFacultyCourse($cellValue);
-            $coursesDto[] = new CourseCreateDto($cellValue, $isMilitaryFacultyCourse);
+        foreach ($cellValues as $rawCourseValue) {
+            $isMilitaryFacultyCourse = $this->isMilitaryFacultyCourse($rawCourseValue);
+            $splitValue = $this->splitRawCourseValue($rawCourseValue);
+            $courseName = $courseTeacher = null;
+            if ($splitValue) {
+                [$courseName, $courseTeacher] =  $splitValue;
+                if (mb_strlen($courseName) < 4 || mb_strlen($courseName) < 4) {
+                    Log::notice('Strange course name and teacher values', [
+                        'courseName' => $courseName,
+                        'teacher' => $courseTeacher,
+                        'rawValue' => $rawCourseValue,
+                    ]);
+                }
+
+            }
+
+            $coursesDto[] = new CourseCreateDto($rawCourseValue, $isMilitaryFacultyCourse, $courseTeacher, $courseName);
         }
 
         return $coursesDto;
@@ -202,5 +218,22 @@ class LessonGettingService
             }
         }
         return false;
+    }
+
+    /**
+     * @param string $courseRawValue
+     * @return array<string>|null
+     */
+    private function splitRawCourseValue(string $courseRawValue): ?array
+    {
+        $matches = [];
+        if (preg_match(self::FIO_REGEX, $courseRawValue, $matches)) {
+            $firstMatchString = $matches[0];
+            $fioOffset = mb_strpos($courseRawValue, $firstMatchString);
+            $courseName = trim(mb_substr($courseRawValue, 0, $fioOffset));
+            $courseTeacher = trim(mb_substr($courseRawValue, $fioOffset));
+            return [$courseName, $courseTeacher];
+        }
+        return null;
     }
 }
