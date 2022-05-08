@@ -3,6 +3,7 @@
 namespace App\Service\Schedule;
 
 use App\Entities\Day;
+use App\Service\Schedule\Assembler\GroupsAssembler;
 use App\Service\Schedule\Assembler\LessonAssembler;
 use App\Service\Schedule\Exception\CannotFindDayException;
 use App\Service\Schedule\Exception\CannotFindFirstGroupNameException;
@@ -11,7 +12,9 @@ use App\Service\Schedule\Processing\DayName\Dto\DayCellDto;
 use App\Service\Schedule\Processing\Dto\GroupCoordinatesDto;
 use App\Service\Schedule\Processing\GroupCoordinatesProcessingService;
 use App\Service\Schedule\Processing\Utils\ProcessingUtils;
+use Doctrine\ORM\EntityManagerInterface;
 use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -27,9 +30,8 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
     public function __construct(
         private GroupCoordinatesProcessingService $groupProcessingService,
         private DayGettingService $dayGettingService,
-        private ProcessingUtils $utils,
         private LessonGettingService $lessonGettingService,
-        private LessonAssembler $lessonAssembler,
+        private GroupsAssembler $groupsAssembler,
     ) {
     }
 
@@ -39,8 +41,9 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
      * @throws Exception
      * @throws CannotFindDayException
      */
-    public function getSchedule(Spreadsheet $spreadsheet): mixed
+    public function getSchedule(ScheduleGettingRequest $scheduleGettingRequest): mixed
     {
+        $spreadsheet = $scheduleGettingRequest->getSpreadsheet();
         $worksheet = $spreadsheet->getSheet(0);
 
         $groupsOnAWorksheet = $this->groupProcessingService->findAGroupsCoordinate($worksheet);
@@ -65,7 +68,8 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
                     break;
                 }
 
-                $lessonDto = $this->lessonGettingService->getLessonDto($worksheet, $columnOfGroup, $rowIndex, $group);
+
+                $lessonDto = $this->lessonGettingService->getLessonDto($worksheet, $columnOfGroup, $rowIndex, $group, $currentDayDto);
 
 
                 if ($lessonDto) {
@@ -83,12 +87,24 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
                 }
             }
 
-            $lessons = [];
-            foreach ($lessonsDto as $lessonDto) {
-                $lessons[] = $this->lessonAssembler->create($lessonDto);
-            }
+            // уроки для 1 и 2 группы
+            // если они одинаковы, то создавать только одну группу, если не одинаковы - то 2 группы
+            // если не одинаковы, создавать группа_название + подгруппа
 
-            $lessonsForGroup[$group->getGroupName()] = $lessons;
+//            у lesson только один course
+//            $lessons = [];
+//            foreach ($lessonsDto as $lessonDto) {
+//                $lessons[] = $this->lessonAssembler->create($lessonDto);
+//            }
+            $lessonsForGroup[$group->getGroupName()] = $lessonsDto;
+
+//            break;
+        }
+
+        $dateStart = $scheduleGettingRequest->getDateStart();
+        $dateEnd = $scheduleGettingRequest->getDateEnd();
+        foreach ($lessonsForGroup as $groupName => $lessonForGroup) {
+            $groups[] = $this->groupsAssembler->create($groupName, $lessonForGroup, $dateStart, $dateEnd);
         }
 
         return $lessonsForGroup;

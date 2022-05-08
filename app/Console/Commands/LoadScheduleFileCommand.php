@@ -13,7 +13,7 @@ class LoadScheduleFileCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'zig:load {file}';
+    protected $signature = 'zig:load {file} {dateStart?}';
 
     /**
      * @var string
@@ -31,9 +31,10 @@ class LoadScheduleFileCommand extends Command
     {
         $this->info('Start command');
         $filepath = ROOT_DIR . '/' . ltrim($this->argument('file'), '/');
+        $dateStart = $this->argument('dateStart');
 
         try {
-            $this->scheduleFileProcessingService->getScheduleFromFile($filepath);
+            $this->scheduleFileProcessingService->getScheduleFromFile($filepath, $dateStart);
         } catch (\Throwable $e) {
             $this->error('Error');
             $this->warn($e);

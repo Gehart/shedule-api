@@ -3,29 +3,56 @@
 namespace App\Service\Schedule\Assembler;
 
 use App\Entities\Lesson;
+use App\Service\Schedule\Processing\Dto\CreatingDto\CourseCreateDto;
 use App\Service\Schedule\Processing\Dto\CreatingDto\LessonCreateDto;
+use Doctrine\ORM\EntityManagerInterface;
 
 class LessonAssembler
 {
 
     public function __construct(
         private CourseAssembler $courseAssembler,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
-    public function create(LessonCreateDto $lessonCreateDto): Lesson
+    public function create(LessonCreateDto $lessonCreateDto, CourseCreateDto $courseCreateDto): Lesson
     {
         $courses = [];
-        foreach ($lessonCreateDto->getCoursesDto() as $courseDto) {
-            $courses[] = $this->courseAssembler->create($courseDto);
-        }
+        $coursesDto = $lessonCreateDto->getCoursesDto();
 
-        return new Lesson(
-            $courses,
+//        $coursesAreEqual = true;
+//        $lastCourseNameValue = null;
+//        foreach ($coursesDto as $courseDto) {
+//            if ($lastCourseNameValue !== null && $lastCourseNameValue !== $courseDto->getRawCourse()) {
+//                $coursesAreEqual = false;
+//                break;
+//            }
+//            $lastCourseNameValue = $courseDto->getRawCourse();
+//        }
+//
+//        if ($coursesAreEqual) {
+//            $coursesDto = count($coursesDto) ? $coursesDto : [];
+//        }
+//
+
+//        foreach ($coursesDto as $courseDto) {
+//            $course = $this->courseAssembler->create($courseDto);
+//            $this->entityManager->persist($course);
+//            $courses[] = $course;
+//        }
+        $course = $this->courseAssembler->create($courseCreateDto);
+        $this->entityManager->persist($course);
+        $lesson = new Lesson(
+            $course,
             $lessonCreateDto->getSequenceNumber(),
             $lessonCreateDto->getStartTime(),
             $lessonCreateDto->getTypeOfLesson(),
             $lessonCreateDto->getClassroom(),
         );
+
+        $lesson->setDayNumber($lessonCreateDto->getDay()->getNumber());
+
+        return $lesson;
     }
 }

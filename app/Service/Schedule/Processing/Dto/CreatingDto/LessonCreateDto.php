@@ -2,6 +2,8 @@
 
 namespace App\Service\Schedule\Processing\Dto\CreatingDto;
 
+use App\Entities\Day;
+
 class LessonCreateDto
 {
     private bool $isMilitaryFacultyLesson;
@@ -9,6 +11,7 @@ class LessonCreateDto
     private ?string $startTime;
     private ?string $typeOfLesson;
     private ?string $classroom;
+    private Day $day;
 
     /**
      * @var array<CourseCreateDto>
@@ -17,6 +20,7 @@ class LessonCreateDto
 
     /**
      * @param array $coursesDto
+     * @param Day $day
      * @param bool $isMilitaryFacultyLesson
      * @param string|null $sequenceNumber
      * @param string|null $startTime
@@ -25,13 +29,15 @@ class LessonCreateDto
      */
     public function __construct(
         array   $coursesDto,
+        Day $day,
         bool    $isMilitaryFacultyLesson = false,
         ?string $sequenceNumber = null,
         ?string $startTime = null,
         ?string $typeOfLesson = null,
-        ?string $classroom = null
+        ?string $classroom = null,
     ) {
         $this->coursesDto = $coursesDto;
+        $this->day = $day;
         $this->isMilitaryFacultyLesson = $isMilitaryFacultyLesson;
         $this->sequenceNumber = $sequenceNumber;
         $this->startTime = $startTime;
@@ -85,5 +91,13 @@ class LessonCreateDto
     public function getCoursesDto(): array
     {
         return $this->coursesDto;
+    }
+
+    /**
+     * @return Day
+     */
+    public function getDay(): Day
+    {
+        return $this->day;
     }
 }

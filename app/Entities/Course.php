@@ -2,10 +2,34 @@
 
 namespace App\Entities;
 
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="course")
+ */
 class Course
 {
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
+    private ?int $id = null;
+
+    /**
+     * @ORM\Column(name="raw_course", type="text")
+     */
     private string $rawCourse;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
     private ?string $teacher;
+
+    /**
+     * @ORM\Column(name="course_name", type="text", nullable=true)
+     */
     private ?string $courseName;
 
     /**
@@ -18,6 +42,14 @@ class Course
         $this->rawCourse = $rawCourse;
         $this->teacher = $teacher;
         $this->courseName = $courseName;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 
     /**

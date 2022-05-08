@@ -3,6 +3,7 @@
 namespace App\Service\Schedule;
 
 use App\Service\Schedule\Dictionary\ScheduleDictionary;
+use App\Service\Schedule\Processing\DayName\Dto\DayCellDto;
 use App\Service\Schedule\Processing\Dto\CreatingDto\CourseCreateDto;
 use App\Service\Schedule\Processing\Dto\CreatingDto\LessonCreateDto;
 use App\Service\Schedule\Processing\Dto\GroupCoordinatesDto;
@@ -33,10 +34,17 @@ class LessonGettingService
      * @param string $columnOfGroup
      * @param int $rowIndex
      * @param GroupCoordinatesDto $group
+     * @param DayCellDto $currentDay
      * @return LessonCreateDto|null
      * @throws Exception
      */
-    public function getLessonDto(Worksheet $worksheet, string $columnOfGroup, int $rowIndex, GroupCoordinatesDto $group): ?LessonCreateDto
+    public function getLessonDto(
+        Worksheet $worksheet,
+        string $columnOfGroup,
+        int $rowIndex,
+        GroupCoordinatesDto $group,
+        DayCellDto $currentDay
+    ): ?LessonCreateDto
     {
         $courses = $this->getCourses($worksheet, $columnOfGroup, $rowIndex, $group);
         if (count($courses) === 0) {
@@ -45,7 +53,7 @@ class LessonGettingService
 
         $isMilitaryFacultyLesson = $courses[0]->isMilitaryFaculty();
         if ($isMilitaryFacultyLesson) {
-            return new LessonCreateDto($courses, $isMilitaryFacultyLesson);
+            return new LessonCreateDto($courses, $currentDay->getDay(), $isMilitaryFacultyLesson);
         }
 
         [$lessonSequenceNumber, $lessonColumn] = $this->getLessonNumber($worksheet, $columnOfGroup, $rowIndex);
@@ -79,7 +87,17 @@ class LessonGettingService
             ]);
         }
 
-        return new LessonCreateDto($courses, $isMilitaryFacultyLesson, $lessonSequenceNumber, $startTime, $typeOfLesson, $classroom);
+//        $dayNumber =  $currentDay->getDay()->getNumber();
+
+        return new LessonCreateDto(
+            $courses,
+            $currentDay->getDay(),
+            $isMilitaryFacultyLesson,
+            $lessonSequenceNumber,
+            $startTime,
+            $typeOfLesson,
+            $classroom,
+        );
 }
 
 /**

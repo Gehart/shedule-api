@@ -8,21 +8,18 @@ class Lesson
     private ?string $startTime;
     private ?string $typeOfLesson;
     private ?string $classroom;
-
-    /**
-     * @var array<Course>
-     */
-    private array $courses;
+    private Course $course;
+    private ?int $dayNumber;
 
     /**
      * @param string|null $sequenceNumber
      * @param string|null $startTime
      * @param string|null $typeOfLesson
      * @param string|null $classroom
-     * @param array<Course> $courses
+     * @param Course $courses
      */
     public function __construct(
-        array $courses,
+        Course $courses,
         ?string $sequenceNumber = null,
         ?string $startTime = null,
         ?string $typeOfLesson = null,
@@ -32,7 +29,7 @@ class Lesson
         $this->startTime = $startTime;
         $this->typeOfLesson = $typeOfLesson;
         $this->classroom = $classroom;
-        $this->courses = $courses;
+        $this->course = $courses;
     }
 
     /**
@@ -100,11 +97,11 @@ class Lesson
     }
 
     /**
-     * @return array<Course>
+     * @return Course
      */
-    public function getCourses(): array
+    public function getCourse(): Course
     {
-        return $this->courses;
+        return $this->course;
     }
 
     /**
@@ -112,6 +109,22 @@ class Lesson
      */
     public function setCourses(array $courses): void
     {
-        $this->courses = $courses;
+        $this->course = $courses;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getDayNumber(): ?int
+    {
+        return $this->dayNumber;
+    }
+
+    /**
+     * @param int $dayNumber
+     */
+    public function setDayNumber(int $dayNumber): void
+    {
+        $this->dayNumber = $dayNumber;
     }
 }

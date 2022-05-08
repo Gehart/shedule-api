@@ -6,6 +6,7 @@ use App\Exceptions\Processing\NotFoundFileException;
 use App\Infrastructure\FilesystemAdapter;
 use App\Infrastructure\Spreadsheet\LoadingFileService;
 use App\Service\Schedule\ScheduleByWeekStrategyService;
+use App\Service\Schedule\ScheduleGettingRequest;
 use App\Service\Schedule\ScheduleGettingServiceFactory;
 use Illuminate\Support\Facades\Log;
 
@@ -19,11 +20,15 @@ class ScheduleFileProcessingService
     }
 
     /**
-     * @param $filepath
+     * @param string $filepath
+     * @param string|null $dateStart
      * @return void
-     * @throws \Throwable
+     * @throws NotFoundFileException
+     * @throws Schedule\Exception\ScheduleGettingStrategyNotFoundException
+     * @throws \League\Flysystem\FilesystemException
+     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
      */
-    public function getScheduleFromFile($filepath): void
+    public function getScheduleFromFile(string $filepath, ?string $dateStart): void
     {
         if ($this->filesystemAdapter->fileExists($filepath)) {
             throw new NotFoundFileException();
@@ -34,7 +39,37 @@ class ScheduleFileProcessingService
         ]);
         $spreadsheet = $this->loadingFileService->load($filepath);
 
+        $dateStart = $dateStart ? new \DateTime($dateStart) : $this->getClosestMonday();
+        $dateEnd = $this->getScheduleDateEnd($dateStart);
+
         $scheduleGettingService = $this->scheduleGettingServiceFactory->getByStrategy(ScheduleByWeekStrategyService::STRATEGY_NAME);
-        $scheduleGettingService->getSchedule($spreadsheet);
+
+        $scheduleGettingRequest = new ScheduleGettingRequest($spreadsheet, $dateStart, $dateEnd);
+
+        $scheduleGettingService->getSchedule($scheduleGettingRequest);
+    }
+
+    /**
+     * @return \DateTime
+     */
+    private function getClosestMonday(): \DateTime
+    {
+        $date = new \DateTime();
+        $date->modify('next monday');
+        $date->setTime(0, 0);
+        return $date;
+    }
+
+    /**
+     * @param \DateTime $dateStart
+     * @return \DateTime
+     * @throws \Exception
+     */
+    private function getScheduleDateEnd(\DateTime $dateStart): \DateTime
+    {
+        $dateEnd = new \DateTime($dateStart->format('Y-m-d'));
+        $dateEnd->modify('+1 weeks');
+        $dateEnd->modify('-1 minute');
+        return $dateEnd;
     }
 }
