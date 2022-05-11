@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Domain\Entities;
+namespace App\Domain\Entities\Group;
 
+use App\Domain\Entities\Schedule;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="GroupRepository")
  * @ORM\Table(name="groups")
  */
 class Group
@@ -23,9 +26,9 @@ class Group
     private string $name;
 
     /**
-     * @ORM\OneToOne(targetEntity="Schedule", inversedBy="group")
+     * @ORM\OneToMany(targetEntity="App\Domain\Entities\Schedule", mappedBy="group")
      */
-    private ?Schedule $schedule;
+    private Collection $schedules;
 
     /**
      * @param string $name
@@ -33,6 +36,7 @@ class Group
     public function __construct(string $name)
     {
         $this->name = $name;
+        $this->schedules = new ArrayCollection();
     }
 
     /**
@@ -52,18 +56,15 @@ class Group
     }
 
     /**
-     * @return Schedule|null
+     * @return Collection
      */
-    public function getSchedule(): ?Schedule
+    public function getSchedules(): Collection
     {
-        return $this->schedule;
+        return $this->schedules;
     }
 
-    /**
-     * @param Schedule|null $schedule
-     */
-    public function setSchedule(?Schedule $schedule): void
+    public function addSchedule(Schedule $schedule)
     {
-        $this->schedule = $schedule;
+        $this->schedules[] = $schedule;
     }
 }

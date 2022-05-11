@@ -54,6 +54,7 @@ class LessonAssembler
         );
 
         $lesson->setDayNumber($lessonCreateDto->getDay()->getNumber());
+        $course->setLesson($lesson);
 
         return $lesson;
     }

@@ -9,4 +9,5 @@ Homestead.yaml
 !/docker/postgres/.gitkeep
 /docker/postgres
 /storage/files/*
+/storage/proxies
 !/storage/files/.gitkeep

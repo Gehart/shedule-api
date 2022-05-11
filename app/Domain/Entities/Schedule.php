@@ -2,6 +2,7 @@
 
 namespace App\Domain\Entities;
 
+use App\Domain\Entities\Group\Group;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -40,14 +41,20 @@ class Schedule
     private \DateTime $dayEnd;
 
     /**
-     * @ORM\OneToOne(
-     *     targetEntity="Group",
-     *     mappedBy="schedule",
-     *     cascade={"persist"}
+     * @ORM\Column(name="created", type="datetime")
+     */
+    private \DateTime $created;
+
+    /**
+     * @ORM\ManyToOne(
+     *     targetEntity="App\Domain\Entities\Group\Group",
+     *     inversedBy="schedules",
+     *     cascade={"persist", "refresh", "remove"}
      * )
      * @ORM\JoinColumn(name="group_id", referencedColumnName="id")
      */
     private ?Group $group = null;
+
 
     /**
      * @param \DateTime $dayStart
@@ -58,6 +65,7 @@ class Schedule
         $this->dayStart = $dayStart;
         $this->dayEnd = $dayEnd;
         $this->lessons = new ArrayCollection();
+        $this->created = new \DateTime();
     }
 
     /**
@@ -130,5 +138,13 @@ class Schedule
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getCreated(): \DateTime
+    {
+        return $this->created;
     }
 }

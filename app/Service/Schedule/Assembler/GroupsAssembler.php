@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\Schedule\Assembler;
 
-use App\Domain\Entities\Group;
+use App\Domain\Entities\Group\Group;
+use App\Domain\Entities\Group\GroupRepository;
 use App\Domain\Entities\Schedule;
 use App\Service\Schedule\Processing\Dto\CreatingDto\LessonCreateDto;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,9 +28,9 @@ class GroupsAssembler
      * @param array<string, LessonCreateDto> $lessonsDtoForGroup
      * @param \DateTime $scheduleDateStart
      * @param \DateTime $scheduleDateEnd
-     * @return Group
+     * @return array<Group>
      */
-    public function create(string $groupName, array $lessonsDtoForGroup, \DateTime $scheduleDateStart, \DateTime $scheduleDateEnd): Group
+    public function create(string $groupName, array $lessonsDtoForGroup, \DateTime $scheduleDateStart, \DateTime $scheduleDateEnd): array
     {
         // если они одинаковы, то создавать только одну группу, если не одинаковы - то 2 группы
         // если не одинаковы, создавать группа_название + подгруппа
@@ -47,22 +48,18 @@ class GroupsAssembler
         }
 
         $groups = [];
-        $lessons = [];
         if ($isNeedOnlyOneGroup) {
 
-            $group = new Group($groupName);
+            $group = $this->getGroup($groupName);
             $schedule = new Schedule($scheduleDateStart, $scheduleDateEnd);
             $schedule->setGroup($group);
-            $group->setSchedule($schedule);
+            $group->addSchedule($schedule);
             $this->entityManager->persist($schedule);
 
             foreach ($lessonsDtoForGroup as $groupId => $lesson) {
                 $course = $lesson->getCoursesDto()[0];
-                $lessons[] = $this->lessonAssembler->create($lesson, $course, $schedule);
-                // todo: group create
             }
-
-//            $this->entityManager->persist($schedule);
+            $groups[] = $group;
         } else {
             $subgroup = [];
             foreach ($lessonsDtoForGroup as $groupId => $lesson) {
@@ -77,31 +74,28 @@ class GroupsAssembler
             }
 
             foreach ($subgroup as $index => $subgroupLessonData) {
-                $lessonsForSubGroup = [];
-
                 $subgroupName = $this->getSubgroupName($groupName, $index);
 
-                // todo: get group from db
-                $group = new Group($subgroupName);
+                $group = $this->getGroup($subgroupName);
                 $schedule = new Schedule($scheduleDateStart, $scheduleDateEnd);
                 $schedule->setGroup($group);
-                $group->setSchedule($schedule);
+                $group->addSchedule($schedule);
                 $this->entityManager->persist($schedule);
                 foreach ($subgroupLessonData as $subgroupData) {
                     $subgroupCourse = $subgroupData['course'];
                     $subgroupLesson = $subgroupData['lesson'];
                     $lesson = $this->lessonAssembler->create($subgroupLesson, $subgroupCourse, $schedule);
-                    $lessonsForSubGroup[] = $lesson;
                     $this->entityManager->persist($lesson);
                 }
 
                 $this->entityManager->persist($schedule);
-//                    создать группу
+                $groups[] = $group;
+                break;
             }
         }
 
         $this->entityManager->flush();
-        return new Group($groupName);
+        return $groups;
     }
 
     /**
@@ -122,5 +116,22 @@ class GroupsAssembler
             ]);
         }
         return $groupName . ' ' . $subgroupName;
+    }
+
+    /**
+     * @param string $groupName
+     * @return Group
+     */
+    private function getGroup(string $groupName): Group
+    {
+        /** @var GroupRepository $groupRepository */
+        $groupRepository = $this->entityManager->getRepository(Group::class);
+        $group = $groupRepository->findOneBy(['name' => $groupName]);
+
+        if (!$group instanceof Group) {
+            $group = new Group($groupName);
+        }
+
+        return $group;
     }
 }

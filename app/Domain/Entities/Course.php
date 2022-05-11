@@ -104,4 +104,21 @@ class Course
     {
         $this->courseName = $courseName;
     }
+
+    /**
+     * @param Lesson $lesson
+     * @return void
+     */
+    public function setLesson(Lesson $lesson): void
+    {
+        $this->lesson = $lesson;
+    }
+
+    /**
+     * @return Lesson
+     */
+    public function getLesson(): Lesson
+    {
+        return $this->lesson;
+    }
 }
