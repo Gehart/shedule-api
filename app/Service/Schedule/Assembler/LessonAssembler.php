@@ -3,6 +3,7 @@
 namespace App\Service\Schedule\Assembler;
 
 use App\Entities\Lesson;
+use App\Entities\Schedule;
 use App\Service\Schedule\Processing\Dto\CreatingDto\CourseCreateDto;
 use App\Service\Schedule\Processing\Dto\CreatingDto\LessonCreateDto;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,7 +17,7 @@ class LessonAssembler
     ) {
     }
 
-    public function create(LessonCreateDto $lessonCreateDto, CourseCreateDto $courseCreateDto): Lesson
+    public function create(LessonCreateDto $lessonCreateDto, CourseCreateDto $courseCreateDto, Schedule $schedule): Lesson
     {
         $courses = [];
         $coursesDto = $lessonCreateDto->getCoursesDto();
@@ -44,6 +45,7 @@ class LessonAssembler
         $course = $this->courseAssembler->create($courseCreateDto);
         $this->entityManager->persist($course);
         $lesson = new Lesson(
+            $schedule,
             $course,
             $lessonCreateDto->getSequenceNumber(),
             $lessonCreateDto->getStartTime(),

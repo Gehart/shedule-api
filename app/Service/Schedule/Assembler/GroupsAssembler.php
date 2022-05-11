@@ -9,6 +9,7 @@ use App\Entities\Schedule;
 use App\Service\Schedule\Processing\Dto\CreatingDto\CourseCreateDto;
 use App\Service\Schedule\Processing\Dto\CreatingDto\LessonCreateDto;
 use Doctrine\ORM\EntityManagerInterface;
+use Illuminate\Support\Facades\Log;
 
 class GroupsAssembler
 {
@@ -49,17 +50,23 @@ class GroupsAssembler
         $groups = [];
         $lessons = [];
         if ($isNeedOnlyOneGroup) {
-            foreach ($lessonsDtoForGroup as $groupName => $lesson) {
+
+            $group = new Group($groupName);
+            $schedule = new Schedule($scheduleDateStart, $scheduleDateEnd);
+            $schedule->setGroup($group);
+            $group->setSchedule($schedule);
+            $this->entityManager->persist($schedule);
+
+            foreach ($lessonsDtoForGroup as $groupId => $lesson) {
                 $course = $lesson->getCoursesDto()[0];
-                $lessons[] = $this->lessonAssembler->create($lesson, $course);
+                $lessons[] = $this->lessonAssembler->create($lesson, $course, $schedule);
                 // todo: group create
             }
 
-            $schedule = new Schedule($lessons, $scheduleDateStart, $scheduleDateEnd);
 //            $this->entityManager->persist($schedule);
         } else {
             $subgroup = [];
-            foreach ($lessonsDtoForGroup as $groupName => $lesson) {
+            foreach ($lessonsDtoForGroup as $groupId => $lesson) {
                 foreach ($lesson->getCoursesDto() as $index => $course) {
                     if ($course->getRawCourse() !== '') {
                         $subgroup[$index][] = [
@@ -70,21 +77,40 @@ class GroupsAssembler
                 }
             }
 
-            foreach ($subgroup as $subgroupLessonData) {
+            foreach ($subgroup as $index => $subgroupLessonData) {
                 $lessonsForSubGroup = [];
+
+                $subgroupName = $groupName;
+                if ($index === 0) {
+                    $subgroupName = $groupName . ' ' . self::FIRST_SUBGROUP;
+                } else if ($index === 1) {
+                    $subgroupName = $groupName . ' ' . self::SECOND_SUBGROUP;
+                } else {
+                    Log::warning('Subgroup index is too big!', [
+                        'subgroupIndex' => $index,
+                    ]);
+                }
+
+                // todo: get group from db
+                $group = new Group($subgroupName);
+                $schedule = new Schedule($scheduleDateStart, $scheduleDateEnd);
+                $schedule->setGroup($group);
+                $group->setSchedule($schedule);
+                $this->entityManager->persist($schedule);
                 foreach ($subgroupLessonData as $subgroupData) {
                     $subgroupCourse = $subgroupData['course'];
                     $subgroupLesson = $subgroupData['lesson'];
-                    $lessonsForSubGroup[] = $this->lessonAssembler->create($subgroupLesson, $subgroupCourse);
+                    $lesson = $this->lessonAssembler->create($subgroupLesson, $subgroupCourse, $schedule);
+                    $lessonsForSubGroup[] = $lesson;
+                    $this->entityManager->persist($lesson);
                 }
 
-                $schedule = new Schedule($lessonsForSubGroup, $scheduleDateStart, $scheduleDateEnd);
+                $this->entityManager->persist($schedule);
 //                    создать группу
             }
-
-//            $this->entityManager->persist($schedule);
         }
 
-        return new Group();
+        $this->entityManager->flush();
+        return new Group($groupName);
     }
 }

@@ -2,29 +2,62 @@
 
 namespace App\Entities;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="schedule")
+ */
 class Schedule
 {
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
+    private ?int $id = null;
+
+    /**
+     * @var Collection<Lesson>
+     * @ORM\OneToMany(
+     *     targetEntity="Lesson",
+     *     mappedBy="schedule",
+     *     cascade={"persist", "remove", "merge"},
+     * )
+     */
+    private Collection $lessons;
+
+    /**
+     * @ORM\Column(name="day_start", type="datetime")
+     */
     private \DateTime $dayStart;
+
+    /**
+     * @ORM\Column(name="day_end", type="datetime")
+     */
     private \DateTime $dayEnd;
 
-    // group
     /**
-     * @var array<Lesson>
+     * @ORM\OneToOne(
+     *     targetEntity="Group",
+     *     mappedBy="schedule",
+     *     cascade={"persist"}
+     * )
+     * @ORM\JoinColumn(name="group_id", referencedColumnName="id")
      */
-    private array $lessons;
-
     private ?Group $group = null;
 
     /**
-     * @param array $lessons
      * @param \DateTime $dayStart
      * @param \DateTime $dayEnd
      */
-    public function __construct(array $lessons, \DateTime $dayStart, \DateTime $dayEnd)
+    public function __construct(\DateTime $dayStart, \DateTime $dayEnd)
     {
-        $this->lessons = $lessons;
         $this->dayStart = $dayStart;
         $this->dayEnd = $dayEnd;
+        $this->lessons = new ArrayCollection();
     }
 
     /**
@@ -60,17 +93,17 @@ class Schedule
     }
 
     /**
-     * @return Lesson[]
+     * @return Collection|Lesson[]
      */
-    public function getLessons(): array
+    public function getLessons(): Collection
     {
         return $this->lessons;
     }
 
     /**
-     * @param Lesson[] $lessons
+     * @param Collection $lessons
      */
-    public function setLessons(array $lessons): void
+    public function setLessons(Collection $lessons): void
     {
         $this->lessons = $lessons;
     }
@@ -89,5 +122,13 @@ class Schedule
     public function setGroup(?Group $group): void
     {
         $this->group = $group;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 }

@@ -33,6 +33,11 @@ class Course
     private ?string $courseName;
 
     /**
+     * @ORM\OneToOne(targetEntity="Lesson", inversedBy="course")
+     */
+    private Lesson $lesson;
+
+    /**
      * @param string $rawCourse
      * @param string|null $teacher
      * @param string|null $courseName

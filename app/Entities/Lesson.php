@@ -2,34 +2,96 @@
 
 namespace App\Entities;
 
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="lesson")
+ */
 class Lesson
 {
-    private ?string $sequenceNumber;
-    private ?string $startTime;
-    private ?string $typeOfLesson;
-    private ?string $classroom;
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
+    private ?int $id = null;
+
+    /**
+     * @ORM\OneToOne(targetEntity="Course", mappedBy="lesson")
+     * @ORM\JoinColumn(name="course_id", referencedColumnName="id")
+     */
     private Course $course;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Schedule", inversedBy="lessons")
+     * @ORM\JoinColumn(name="schedule_id", referencedColumnName="id")
+     */
+    private Schedule $schedule;
+
+    /**
+     * @ORM\Column(name="sequence_number", type="text", nullable=true)
+     */
+    private ?string $sequenceNumber;
+
+    /**
+     * @ORM\Column(name="start_time", type="text", nullable=true)
+     */
+    private ?string $startTime;
+
+    /**
+     * @ORM\Column(name="type_of_lesson", type="text", nullable=true)
+     */
+    private ?string $typeOfLesson;
+
+    /**
+     * @ORM\Column(name="classroom", type="text", nullable=true)
+     */
+    private ?string $classroom;
+
+    /**
+     * @ORM\Column(name="day_number", type="integer", nullable=true)
+     */
     private ?int $dayNumber;
 
     /**
+     * @param Schedule $schedule
+     * @param Course $course
      * @param string|null $sequenceNumber
      * @param string|null $startTime
      * @param string|null $typeOfLesson
      * @param string|null $classroom
-     * @param Course $courses
      */
     public function __construct(
-        Course $courses,
+        Schedule $schedule,
+        Course  $course,
         ?string $sequenceNumber = null,
         ?string $startTime = null,
         ?string $typeOfLesson = null,
         ?string $classroom = null
     ) {
+        $this->schedule = $schedule;
         $this->sequenceNumber = $sequenceNumber;
         $this->startTime = $startTime;
         $this->typeOfLesson = $typeOfLesson;
         $this->classroom = $classroom;
-        $this->course = $courses;
+        $this->course = $course;
+    }
+
+    /**
+     * @return Schedule
+     */
+    public function getSchedule(): Schedule
+    {
+        return $this->schedule;
+    }
+
+    /**
+     * @param Schedule $schedule
+     */
+    public function setSchedule(Schedule $schedule): void
+    {
+        $this->schedule = $schedule;
     }
 
     /**
@@ -126,5 +188,13 @@ class Lesson
     public function setDayNumber(int $dayNumber): void
     {
         $this->dayNumber = $dayNumber;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 }
