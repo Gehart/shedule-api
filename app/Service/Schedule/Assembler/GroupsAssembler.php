@@ -80,16 +80,7 @@ class GroupsAssembler
             foreach ($subgroup as $index => $subgroupLessonData) {
                 $lessonsForSubGroup = [];
 
-                $subgroupName = $groupName;
-                if ($index === 0) {
-                    $subgroupName = $groupName . ' ' . self::FIRST_SUBGROUP;
-                } else if ($index === 1) {
-                    $subgroupName = $groupName . ' ' . self::SECOND_SUBGROUP;
-                } else {
-                    Log::warning('Subgroup index is too big!', [
-                        'subgroupIndex' => $index,
-                    ]);
-                }
+                $subgroupName = $this->getSubgroupName($groupName, $index);
 
                 // todo: get group from db
                 $group = new Group($subgroupName);
@@ -112,5 +103,25 @@ class GroupsAssembler
 
         $this->entityManager->flush();
         return new Group($groupName);
+    }
+
+    /**
+     * @param string $groupName
+     * @param int $index
+     * @return string
+     */
+    private function getSubgroupName(string $groupName, int $index): string
+    {
+        $subgroupName = '';
+        if ($index === 0) {
+            $subgroupName = self::FIRST_SUBGROUP;
+        } else if ($index === 1) {
+            $subgroupName = self::SECOND_SUBGROUP;
+        } else {
+            Log::warning('Subgroup index is too big!', [
+                'subgroupIndex' => $index,
+            ]);
+        }
+        return $groupName . ' ' . $subgroupName;
     }
 }
