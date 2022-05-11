@@ -2,7 +2,7 @@
 
 namespace App\Service\Schedule\Processing\DayName\Dto;
 
-use App\Entities\Day;
+use App\Domain\Entities\Day;
 
 class DayCellDto
 {

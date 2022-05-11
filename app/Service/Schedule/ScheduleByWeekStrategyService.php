@@ -2,22 +2,17 @@
 
 namespace App\Service\Schedule;
 
-use App\Entities\Day;
+use App\Domain\Entities\Day;
 use App\Service\Schedule\Assembler\GroupsAssembler;
-use App\Service\Schedule\Assembler\LessonAssembler;
 use App\Service\Schedule\Exception\CannotFindDayException;
 use App\Service\Schedule\Exception\CannotFindFirstGroupNameException;
 use App\Service\Schedule\Processing\DayName\DayGettingService;
 use App\Service\Schedule\Processing\DayName\Dto\DayCellDto;
 use App\Service\Schedule\Processing\Dto\GroupCoordinatesDto;
 use App\Service\Schedule\Processing\GroupCoordinatesProcessingService;
-use App\Service\Schedule\Processing\Utils\ProcessingUtils;
-use Doctrine\ORM\EntityManagerInterface;
 use Illuminate\Support\Facades\Log;
-use LaravelDoctrine\ORM\Facades\EntityManager;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ScheduleByWeekStrategyService implements ScheduleProcessingInterface

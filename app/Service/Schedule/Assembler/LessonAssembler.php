@@ -2,8 +2,8 @@
 
 namespace App\Service\Schedule\Assembler;
 
-use App\Entities\Lesson;
-use App\Entities\Schedule;
+use App\Domain\Entities\Lesson;
+use App\Domain\Entities\Schedule;
 use App\Service\Schedule\Processing\Dto\CreatingDto\CourseCreateDto;
 use App\Service\Schedule\Processing\Dto\CreatingDto\LessonCreateDto;
 use Doctrine\ORM\EntityManagerInterface;

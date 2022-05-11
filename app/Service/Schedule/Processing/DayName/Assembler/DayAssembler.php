@@ -2,7 +2,7 @@
 
 namespace App\Service\Schedule\Processing\DayName\Assembler;
 
-use App\Entities\Day;
+use App\Domain\Entities\Day;
 
 class DayAssembler
 {

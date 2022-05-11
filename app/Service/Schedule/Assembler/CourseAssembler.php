@@ -2,7 +2,7 @@
 
 namespace App\Service\Schedule\Assembler;
 
-use App\Entities\Course;
+use App\Domain\Entities\Course;
 use App\Service\Schedule\Processing\Dto\CreatingDto\CourseCreateDto;
 
 class CourseAssembler

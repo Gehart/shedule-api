@@ -2,7 +2,7 @@
 
 namespace App\Service\Schedule\Processing\DayName;
 
-use App\Entities\Day;
+use App\Domain\Entities\Day;
 use App\Service\Schedule\Dictionary\ScheduleDictionary;
 use App\Service\Schedule\Exception\CannotFindDayException;
 use App\Service\Schedule\Processing\DayName\Assembler\DayAssembler;

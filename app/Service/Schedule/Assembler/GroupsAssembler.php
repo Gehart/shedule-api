@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\Schedule\Assembler;
 
-use App\Entities\Group;
-use App\Entities\Schedule;
-use App\Service\Schedule\Processing\Dto\CreatingDto\CourseCreateDto;
+use App\Domain\Entities\Group;
+use App\Domain\Entities\Schedule;
 use App\Service\Schedule\Processing\Dto\CreatingDto\LessonCreateDto;
 use Doctrine\ORM\EntityManagerInterface;
 use Illuminate\Support\Facades\Log;
