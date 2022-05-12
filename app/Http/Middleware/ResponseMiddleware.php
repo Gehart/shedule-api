@@ -25,8 +25,6 @@ class ResponseMiddleware
             $response = response($response);
         }
 
-        $response = $this->getResponse($request, $response);
-
-        return $response;
+        return $this->getResponse($request, $response);
     }
 }

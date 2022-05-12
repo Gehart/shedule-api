@@ -9,6 +9,7 @@ use App\Http\Request\StandardRequest;
 use App\Service\GettingSchedule\GettingProcessedScheduleRequest;
 use App\Service\GettingSchedule\GettingProcessedScheduleService;
 use Doctrine\ORM\EntityManagerInterface;
+use Illuminate\Http\Request;
 
 class ScheduleGettingController
 {
@@ -36,5 +37,10 @@ class ScheduleGettingController
         return [
             'id' => $schedule->getId(),
         ];
+    }
+
+    public function getGroup(StandardRequest $request)
+    {
+        $groupPart = $request->input('groupName');
     }
 }

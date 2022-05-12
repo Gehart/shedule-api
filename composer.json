@@ -9,9 +9,10 @@
         "ext-mbstring": "*",
         "doctrine/annotations": "^1.13",
         "laravel-doctrine/orm": "^1.7.13",
-        "laravel/lumen-framework": "^8.3",
+        "laravel/lumen-framework": "8.3.4",
         "league/flysystem": "^3.0",
-        "phpoffice/phpspreadsheet": "1.23"
+        "phpoffice/phpspreadsheet": "1.23",
+        "urameshibr/lumen-form-request": "1.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

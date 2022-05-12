@@ -7,6 +7,7 @@ use App\Infrastructure\FilesystemAdapterInterface;
 use App\Service\Schedule\Dictionary\ScheduleDictionary;
 use App\Service\Schedule\Dictionary\ScheduleDictionaryFactory;
 use Illuminate\Support\ServiceProvider;
+use Urameshibr\Providers\FormRequestServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +24,6 @@ class AppServiceProvider extends ServiceProvider
             $factory = $app->make(ScheduleDictionaryFactory::class);
             return $factory->create();
         });
+        $this->app->register(FormRequestServiceProvider::class);
     }
 }
