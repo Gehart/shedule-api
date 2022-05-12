@@ -25,7 +25,7 @@ class ScheduleGettingController
         EntityManagerInterface $entityManager,
     ): array {
         $groupId = $request->input('groupId', 2);
-        $date = $request->input('date', '2022-05-16');
+        $date = $request->input('date', '2022-05-26');
         $scheduleDate = new \DateTime($date);
         $groupRepository = $entityManager->getRepository(Group::class);
         $group = $groupRepository->getOneBy(['id' => $groupId]);

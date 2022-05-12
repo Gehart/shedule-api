@@ -16,13 +16,16 @@
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\ScheduleGettingController;
 use App\Http\Controllers\ScheduleLoadController;
+use App\Http\Middleware\ResponseMiddleware;
 
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->get('/health-check', HealthCheckController::class . '@check');
+$router->group(['middleware' => [ResponseMiddleware::class]], static function () use ($router) {
+    $router->get('/health-check', HealthCheckController::class . '@check');
 
-$router->get('/test', ScheduleLoadController::class . '@test');
+    $router->get('/test', ScheduleLoadController::class . '@test');
 
-$router->get('/get-schedule', ScheduleGettingController::class . '@getSchedule');
+    $router->get('/get-schedule', ScheduleGettingController::class . '@getSchedule');
+});
