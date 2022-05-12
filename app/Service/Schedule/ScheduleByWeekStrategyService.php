@@ -82,27 +82,17 @@ class ScheduleByWeekStrategyService implements ScheduleProcessingInterface
                 }
             }
 
-            // уроки для 1 и 2 группы
-            // если они одинаковы, то создавать только одну группу, если не одинаковы - то 2 группы
-            // если не одинаковы, создавать группа_название + подгруппа
-
-//            у lesson только один course
-//            $lessons = [];
-//            foreach ($lessonsDto as $lessonDto) {
-//                $lessons[] = $this->lessonAssembler->create($lessonDto);
-//            }
             $lessonsForGroup[$group->getGroupName()] = $lessonsDto;
-
-//            break;
         }
 
         $dateStart = $scheduleGettingRequest->getDateStart();
         $dateEnd = $scheduleGettingRequest->getDateEnd();
+        $groups = [];
         foreach ($lessonsForGroup as $groupName => $lessonForGroup) {
             $groups[] = $this->groupsAssembler->create($groupName, $lessonForGroup, $dateStart, $dateEnd);
         }
 
-        return $lessonsForGroup;
+        return $groups;
     }
 
     /**

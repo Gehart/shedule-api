@@ -6,7 +6,6 @@ use Monolog\Handler\StreamHandler;
 
 class Logger extends \Monolog\Logger
 {
-
     public function init()
     {
         // create a log channel

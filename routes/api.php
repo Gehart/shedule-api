@@ -14,6 +14,7 @@
 */
 
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\ScheduleGettingController;
 use App\Http\Controllers\ScheduleLoadController;
 
 $router->get('/', function () use ($router) {
@@ -23,3 +24,5 @@ $router->get('/', function () use ($router) {
 $router->get('/health-check', HealthCheckController::class . '@check');
 
 $router->get('/test', ScheduleLoadController::class . '@test');
+
+$router->get('/get-schedule', ScheduleGettingController::class . '@getSchedule');
