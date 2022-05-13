@@ -28,4 +28,6 @@ $router->group(['middleware' => [ResponseMiddleware::class]], static function ()
     $router->get('/test', ScheduleLoadController::class . '@test');
 
     $router->get('/get-schedule', ScheduleGettingController::class . '@getSchedule');
+    $router->get('/get-groups', ScheduleGettingController::class . '@getGroups');
+
 });
