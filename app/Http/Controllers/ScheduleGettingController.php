@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Domain\Entities\Group\Group;
+use App\Http\Formatter\GettingScheduleResponseFormatter;
 use App\Http\Request\GroupGettingRequest;
 use App\Http\Request\ScheduleGettingRequest;
 use App\Service\GettingSchedule\GettingGroup\GroupGettingService;
@@ -26,6 +27,7 @@ class ScheduleGettingController
         ScheduleGettingRequest $request,
         GettingProcessedScheduleService $gettingProcessedScheduleService,
         EntityManagerInterface $entityManager,
+        GettingScheduleResponseFormatter $formatter,
     ): array {
         $groupId = $request->input('group_id');
         $date = $request->input('date');
@@ -36,9 +38,7 @@ class ScheduleGettingController
         $request = new GettingProcessedScheduleRequest($group, $scheduleDate);
 
         $schedule = $gettingProcessedScheduleService->getSchedule($request);
-        return [
-            'id' => $schedule->getId(),
-        ];
+        return $formatter->format($schedule);
     }
 
     public function getGroups(

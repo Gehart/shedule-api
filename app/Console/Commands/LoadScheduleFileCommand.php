@@ -40,8 +40,8 @@ class LoadScheduleFileCommand extends Command
             $this->warn($e);
             if ($e instanceof ExceptionWithContextInterface) {
                 $this->warn('Context' . json_encode([
-                        'context' => $e->getContext(),
-                    ]) );
+                    'context' => $e->getContext(),
+                ]) );
             }
         }
         $this->info('Command finished!');

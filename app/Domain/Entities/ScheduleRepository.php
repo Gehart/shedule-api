@@ -22,8 +22,6 @@ class ScheduleRepository extends EntityRepository
         $expr = $queryBuilder->expr();
         $queryBuilder->join(Group::class, 'groups', Join::WITH, $expr->eq('schedule.group', ':groupId'))
             ->setParameter(':groupId', $group->getId());
-//        $queryBuilder->andWhere($expr->eq('schedule.group', ':groupId'))
-//            ->setParameter(':groupId', $group->getId());
 
         if (!empty($params['date'])) {
             /** @var \DateTimeInterface $date */

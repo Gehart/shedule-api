@@ -54,6 +54,12 @@ class ProcessingUtils
         return $worksheet->getCell($currentCoordinates);
     }
 
+    /**
+     * @param Worksheet $worksheet
+     * @param string $columnIndex
+     * @param int $rowIndex
+     * @return string
+     */
     public function getCellValueByColumnAndRow(Worksheet $worksheet, string $columnIndex, int $rowIndex): string
     {
         $currentCell = $this->getCellByColumnAndRow($worksheet, $columnIndex, $rowIndex);

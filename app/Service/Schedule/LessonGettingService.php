@@ -20,7 +20,8 @@ class LessonGettingService
         START_TIME_REGEX = '/\d{1,2}:\d{1,2}/',
         TYPE_OF_LESSON_REGEX = '/\w{1,3}/u',
         MAX_CLASSROOM_STRING_LENGTH = 15,
-        FIO_REGEX = '/\w{3,}\s\w\.\s?\w\./u';
+        FIO_REGEX = '/\w{3,}\s\w\.\s?\w\.?/u',
+        DEFAULT_START_TIME = '08:30';
 
 
     public function __construct(
@@ -53,13 +54,19 @@ class LessonGettingService
 
         $isMilitaryFacultyLesson = $courses[0]->isMilitaryFaculty();
         if ($isMilitaryFacultyLesson) {
-            return new LessonCreateDto($courses, $currentDay->getDay(), $isMilitaryFacultyLesson);
+            return new LessonCreateDto(
+                $courses,
+                $currentDay->getDay(),
+                $isMilitaryFacultyLesson,
+                null,
+                self::DEFAULT_START_TIME
+            );
         }
 
         [$lessonSequenceNumber, $lessonColumn] = $this->getLessonNumber($worksheet, $columnOfGroup, $rowIndex);
 
         $startTimeColumn = $this->utils->getIncreasedColumnAddress($lessonColumn, 1);
-        $startTime = $this->utils->getCellValueByColumnAndRow($worksheet, $startTimeColumn, $rowIndex);
+        $startTime = $this->getCellValue($worksheet, $startTimeColumn, $rowIndex);
         if (!preg_match(self::START_TIME_REGEX, $startTime)) {
             Log::warning('Start time does not match the pattern!', [
                 'startTime' => $startTime,
@@ -70,7 +77,7 @@ class LessonGettingService
         $courseEndColumn = $this->getCourseEndColumn($group, $worksheet, $columnOfGroup, $rowIndex);
 
         $typeOfLessonColumn = $this->utils->getIncreasedColumnAddress($courseEndColumn, 1);
-        $typeOfLesson = $this->utils->getCellValueByColumnAndRow($worksheet, $typeOfLessonColumn, $rowIndex);
+        $typeOfLesson = $this->getCellValue($worksheet, $typeOfLessonColumn, $rowIndex);
         if (!preg_match(self::TYPE_OF_LESSON_REGEX, $typeOfLesson)) {
             Log::warning('Start time does not match the pattern!', [
                 'typeOfLesson' => $typeOfLesson,
@@ -79,7 +86,7 @@ class LessonGettingService
         }
 
         $classroomColumn = $this->utils->getIncreasedColumnAddress($courseEndColumn, 2);
-        $classroom = $this->utils->getCellValueByColumnAndRow($worksheet, $classroomColumn, $rowIndex);
+        $classroom = $this->getCellValue($worksheet, $classroomColumn, $rowIndex);
         if (strlen($classroom) > self::MAX_CLASSROOM_STRING_LENGTH) {
             Log::warning('Classroom has quite long string', [
                 'classroom' => $classroom,
@@ -207,7 +214,7 @@ class LessonGettingService
             $courseName = $courseTeacher = null;
             if ($splitValue) {
                 [$courseName, $courseTeacher] =  $splitValue;
-                if (mb_strlen($courseName) < 4 || mb_strlen($courseName) < 4) {
+                if (mb_strlen($courseName) < 4 || ($courseTeacher && mb_strlen($courseTeacher) < 4)) {
                     Log::notice('Strange course name and teacher values', [
                         'courseName' => $courseName,
                         'teacher' => $courseTeacher,
@@ -252,6 +259,19 @@ class LessonGettingService
             $courseTeacher = trim(mb_substr($courseRawValue, $fioOffset));
             return [$courseName, $courseTeacher];
         }
-        return null;
+        return [$courseRawValue, null];
+    }
+
+    /**
+     * @param Worksheet $worksheet
+     * @param string $columnAddress
+     * @param int $rowIndex
+     * @return string
+     */
+    public function getCellValue(Worksheet $worksheet, string $columnAddress, int $rowIndex): string
+    {
+        $cellValue = $this->utils->getCellValueByColumnAndRow($worksheet, $columnAddress, $rowIndex);
+        $cellValue = str_replace(PHP_EOL, ' ', $cellValue);
+        return trim(preg_replace('/\s\s+/', ' ', $cellValue));
     }
 }
