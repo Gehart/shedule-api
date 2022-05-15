@@ -19,15 +19,29 @@ class IcalFileGeneratingService
     ) {
     }
 
-    public function convertToIcalFormat(IcalFileGeneratingRequest $request): IcalFileGeneratingResponse
+    /**
+     * @param IcalFileGeneratingRequest $request
+     * @return IcalFileGeneratingResponse
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function convertGroupScheduleToIcalFormat(IcalFileGeneratingRequest $request): IcalFileGeneratingResponse
     {
         $group = $request->getGroup();
         $date = $request->getDate();
         /** @var ScheduleRepository $scheduleRepository */
         $scheduleRepository = $this->entityManager->getRepository(Schedule::class);
         $schedule = $scheduleRepository->getScheduleForGroup($group, $date);
-        $icalFileContent = $this->translatingToIcalFormatService->translateToIcalFormat($schedule);
+        $icalFileContent = $this->convertScheduleToIcalFormat($schedule);
 
         return new IcalFileGeneratingResponse($icalFileContent);
+    }
+
+    /**
+     * @param Schedule $schedule
+     * @return string
+     */
+    public function convertScheduleToIcalFormat(Schedule $schedule): string
+    {
+        return $this->translatingToIcalFormatService->translateToIcalFormat($schedule);
     }
 }

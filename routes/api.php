@@ -32,4 +32,6 @@ $router->group(['middleware' => [ResponseMiddleware::class]], static function ()
     $router->get('/get-groups', ScheduleGettingController::class . '@getGroups');
 
     $router->get('/get-ical-file', IcalFileScheduleController::class . '@getIcalFileForSchedule');
+
+    $router->get('/get-ical-file-for-teacher', IcalFileScheduleController::class . '@getIcalFileForTeacherSchedule');
 });

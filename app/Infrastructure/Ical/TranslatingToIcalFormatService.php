@@ -34,9 +34,7 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
             $event->setSummary($summary);
 
             $description = $this->getDescriptionForLesson($lesson);
-            if ($description) {
-                $event->setDescription($description);
-            }
+            $event->setDescription($description);
 
             $lessonStartDateTime = $schedule->getDayStart()->setTime(8, 0);
             $start = new IcalDateTime($lessonStartDateTime, false);
@@ -45,7 +43,6 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
             $event->setOccurrence($occurrence);
 
             $events[] = $event;
-            break;
         }
 
 
@@ -75,6 +72,7 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
     private function getDescriptionForLesson(Lesson $lesson): ?string
     {
         $classroom = $lesson->getClassroom() ?? null;
+        // todo: больше описания
         return $classroom ? 'Аудитория ' . $lesson->getClassroom() : null;
     }
 }
