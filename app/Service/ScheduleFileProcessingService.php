@@ -39,6 +39,8 @@ class ScheduleFileProcessingService
         ]);
         $spreadsheet = $this->loadingFileService->load($filepath);
 
+
+        // todo: get closest monday to datestart
         $dateStart = $dateStart ? new \DateTime($dateStart) : $this->getClosestMonday();
         $dateEnd = $this->getScheduleDateEnd($dateStart);
 

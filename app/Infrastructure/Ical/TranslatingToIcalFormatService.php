@@ -8,7 +8,10 @@ use App\Domain\Entities\Lesson;
 use App\Domain\Entities\Schedule;
 use Eluceo\iCal\Domain\Entity\Calendar;
 use Eluceo\iCal\Domain\Entity\Event;
+use Eluceo\iCal\Domain\ValueObject\Date;
 use Eluceo\iCal\Domain\ValueObject\DateTime as IcalDateTime;
+use Eluceo\iCal\Domain\ValueObject\Occurrence;
+use Eluceo\iCal\Domain\ValueObject\SingleDay;
 use Eluceo\iCal\Domain\ValueObject\TimeSpan;
 use Eluceo\iCal\Domain\ValueObject\Timestamp;
 use Eluceo\iCal\Presentation\Factory\CalendarFactory;
@@ -30,16 +33,13 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
             $timestamp = new Timestamp($dateCreated);
             $event->touch($timestamp);
 
-            $summary = $this->getCourseName($lesson);
+            $summary = $this->getSummary($lesson);
             $event->setSummary($summary);
 
             $description = $this->getDescriptionForLesson($lesson);
             $event->setDescription($description);
 
-            $lessonStartDateTime = $schedule->getDayStart()->setTime(8, 0);
-            $start = new IcalDateTime($lessonStartDateTime, false);
-            $end = new IcalDateTime($lessonStartDateTime->modify('+90 minutes'), false);
-            $occurrence = new TimeSpan($start, $end);
+            $occurrence = $this->getOccurrence($lesson, $schedule);
             $event->setOccurrence($occurrence);
 
             $events[] = $event;
@@ -47,10 +47,9 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
 
 
         $calendar = new Calendar($events);
-//
+
         $componentFactory = new CalendarFactory();
         $calendarComponent = $componentFactory->createCalendar($calendar);
-//
 
         return (string) $calendarComponent;
     }
@@ -62,7 +61,8 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
     private function getCourseName(Lesson $lesson): string
     {
         $course = $lesson->getCourse();
-        return $course->getCourseName() ?? $course->getRawCourse();
+        $courseName = $course->getCourseName() ?? $course->getRawCourse();
+        return '"' . $courseName . '"';
     }
 
     /**
@@ -71,8 +71,93 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
      */
     private function getDescriptionForLesson(Lesson $lesson): ?string
     {
-        $classroom = $lesson->getClassroom() ?? null;
-        // todo: больше описания
-        return $classroom ? 'Аудитория ' . $lesson->getClassroom() : null;
+        $description = '';
+
+        if ($lesson->getCourse()->getTeacher()) {
+            $description .= 'Преподователь: ' . $lesson->getCourse()->getTeacher() . PHP_EOL;
+        }
+
+        if ($lesson->getClassroom()) {
+            $description .= 'Аудитория: ' . $lesson->getClassroom() . PHP_EOL;
+        }
+
+        if ($lesson->getTypeOfLesson()) {
+            $description .= 'Тип урока: ' . $lesson->getTypeOfLesson() . PHP_EOL;
+        }
+
+        if ($lesson->getSequenceNumber()) {
+            $description .= $lesson->getSequenceNumber() . PHP_EOL;
+        }
+
+        return $description;
+    }
+
+    /**
+     * @param Lesson $lesson
+     * @return string
+     */
+    private function getSummary(Lesson $lesson): string
+    {
+        $courseName = $this->getCourseName($lesson);
+        return $courseName;
+    }
+
+    private function getOccurrence(Lesson $lesson, Schedule $schedule): Occurrence
+    {
+        $occurrence = null;
+        $lessonStartTime = $lesson->getStartTime();
+        $validStartTime = $this->validateTime($lessonStartTime);
+
+        if ($validStartTime) {
+            $datetime = $this->createStartDateTimeForLesson($lesson, $schedule);
+            if ($datetime) {
+                $start = new IcalDateTime($datetime, false);
+                $end = new IcalDateTime($datetime->modify('+90 minutes'), false);
+                $occurrence = new TimeSpan($start, $end);
+            }
+        } else {
+            $lessonDayNumber = $lesson->getDayNumber();
+            $lessonDay = $schedule->getDayStart()->modify('+' . $lessonDayNumber - 1 . ' day');
+
+            if (!$lessonDay) {
+                $lessonDay = $schedule->getDayStart();
+            }
+
+            $icalDate = new Date($lessonDay);
+            $occurrence = new SingleDay($icalDate);
+        }
+
+        return $occurrence;
+    }
+
+    /**
+     * @param string|null $time
+     * @return bool
+     */
+    private function validateTime(?string $time): bool
+    {
+        if (!$time) {
+            return false;
+        }
+
+        $dateObj = \DateTimeImmutable::createFromFormat('d.m.Y H:i', "10.10.2010 " . $time);
+        return $dateObj !== false;
+    }
+
+    /**
+     * @param Lesson $lesson
+     * @param Schedule $schedule
+     * @return \DateTimeInterface|null
+     */
+    private function createStartDateTimeForLesson(Lesson $lesson, Schedule $schedule): \DateTimeInterface|null
+    {
+        $lessonStartTime = $lesson->getStartTime();
+        $lessonDayNumber = $lesson->getDayNumber();
+
+        $scheduleDayStart = $schedule->getDayStart()->modify('+' . $lessonDayNumber - 1 . ' day')->format('Y-m-d');
+
+        $lessonStartDateTime = \DateTimeImmutable::createFromFormat('Y-m-d H:i', $scheduleDayStart . ' ' . $lessonStartTime);
+
+        return $lessonStartDateTime ?? null;
     }
 }
