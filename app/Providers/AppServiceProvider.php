@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Infrastructure\FilesystemAdapter;
 use App\Infrastructure\FilesystemAdapterInterface;
+use App\Infrastructure\Ical\TranslatingToIcalFormatInterface;
+use App\Infrastructure\Ical\TranslatingToIcalFormatService;
 use App\Service\Schedule\Dictionary\ScheduleDictionary;
 use App\Service\Schedule\Dictionary\ScheduleDictionaryFactory;
 use Illuminate\Support\ServiceProvider;
@@ -25,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
             return $factory->create();
         });
         $this->app->register(FormRequestServiceProvider::class);
+        $this->app->bind(TranslatingToIcalFormatInterface::class, TranslatingToIcalFormatService::class);
     }
 }

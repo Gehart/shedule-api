@@ -12,20 +12,18 @@ class ScheduleRepository extends EntityRepository
 {
     /**
      * @param Group $group
-     * @param array $params
+     * @param \DateTimeInterface|null $date
      * @return Schedule|null
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function getScheduleForGroup(Group $group, array $params): ?Schedule
+    public function getScheduleForGroup(Group $group, ?\DateTimeInterface $date): ?Schedule
     {
         $queryBuilder = $this->createQueryBuilder('schedule');
         $expr = $queryBuilder->expr();
         $queryBuilder->join(Group::class, 'groups', Join::WITH, $expr->eq('schedule.group', ':groupId'))
             ->setParameter(':groupId', $group->getId());
 
-        if (!empty($params['date'])) {
-            /** @var \DateTimeInterface $date */
-            $date = $params['date'];
+        if (!$date) {
             $queryBuilder->andWhere($expr->between(':date', 'schedule.dayStart', 'schedule.dayEnd'))
                 ->setParameter(':date', $date->format(DATE_ATOM));
         }

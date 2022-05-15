@@ -101,7 +101,7 @@ class Schedule
     }
 
     /**
-     * @return Collection|Lesson[]
+     * @return Collection<Lesson>
      */
     public function getLessons(): Collection
     {

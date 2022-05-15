@@ -14,6 +14,7 @@
 */
 
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\IcalFileScheduleController;
 use App\Http\Controllers\ScheduleGettingController;
 use App\Http\Controllers\ScheduleLoadController;
 use App\Http\Middleware\ResponseMiddleware;
@@ -30,4 +31,5 @@ $router->group(['middleware' => [ResponseMiddleware::class]], static function ()
     $router->get('/get-schedule', ScheduleGettingController::class . '@getSchedule');
     $router->get('/get-groups', ScheduleGettingController::class . '@getGroups');
 
+    $router->get('/get-ical-file', IcalFileScheduleController::class . '@getIcalFileForSchedule');
 });

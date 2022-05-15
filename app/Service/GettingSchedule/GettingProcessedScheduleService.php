@@ -29,11 +29,8 @@ class GettingProcessedScheduleService
         $scheduleRepository = $this->entityManager->getRepository(Schedule::class);
 
         $group = $request->getGroup();
-        $params = [
-            'date' => $request->getScheduleDate(),
-        ];
 
-        $schedule = $scheduleRepository->getScheduleForGroup($group, $params);
+        $schedule = $scheduleRepository->getScheduleForGroup($group, $request->getScheduleDate());
         if (!$schedule instanceof Schedule) {
             throw new EntityWasNotFoundException();
         }
