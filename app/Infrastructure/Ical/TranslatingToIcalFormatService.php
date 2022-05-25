@@ -71,25 +71,30 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
      */
     private function getDescriptionForLesson(Lesson $lesson): ?string
     {
-        $description = '';
+        $description = [];
 
         if ($lesson->getCourse()->getTeacher()) {
-            $description .= 'Преподователь: ' . $lesson->getCourse()->getTeacher() . PHP_EOL;
+            $description[] = 'Преподователь: ' . $lesson->getCourse()->getTeacher();
+        }
+
+        $group = $lesson->getSchedule()->getGroup();
+        if ($group) {
+            $description[] = 'Группа: ' . $group->getName();
         }
 
         if ($lesson->getClassroom()) {
-            $description .= 'Аудитория: ' . $lesson->getClassroom() . PHP_EOL;
+            $description[] = 'Аудитория: ' . $lesson->getClassroom();
         }
 
         if ($lesson->getTypeOfLesson()) {
-            $description .= 'Тип урока: ' . $lesson->getTypeOfLesson() . PHP_EOL;
+            $description[] = 'Тип урока: ' . $lesson->getTypeOfLesson();
         }
 
         if ($lesson->getSequenceNumber()) {
-            $description .= $lesson->getSequenceNumber() . PHP_EOL;
+            $description[] = $lesson->getSequenceNumber();
         }
 
-        return $description;
+        return implode(PHP_EOL, $description);
     }
 
     /**
@@ -117,7 +122,8 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
             }
         } else {
             $lessonDayNumber = $lesson->getDayNumber();
-            $lessonDay = $schedule->getDayStart()->modify('+' . $lessonDayNumber - 1 . ' day');
+            $lessonDayStart = \DateTimeImmutable::createFromMutable($schedule->getDayStart());
+            $lessonDay = $lessonDayStart->modify('+' . $lessonDayNumber - 1 . ' day');
 
             if (!$lessonDay) {
                 $lessonDay = $schedule->getDayStart();
@@ -154,9 +160,11 @@ class TranslatingToIcalFormatService implements TranslatingToIcalFormatInterface
         $lessonStartTime = $lesson->getStartTime();
         $lessonDayNumber = $lesson->getDayNumber();
 
-        $scheduleDayStart = $schedule->getDayStart()->modify('+' . $lessonDayNumber - 1 . ' day')->format('Y-m-d');
+        $scheduleDayStart = \DateTimeImmutable::createFromMutable($schedule->getDayStart());
+        $lessonDay = $scheduleDayStart->modify('+' . $lessonDayNumber - 1 . ' day');
+        $lessonDayStart = $lessonDay->format('Y-m-d');
 
-        $lessonStartDateTime = \DateTimeImmutable::createFromFormat('Y-m-d H:i', $scheduleDayStart . ' ' . $lessonStartTime);
+        $lessonStartDateTime = \DateTimeImmutable::createFromFormat('Y-m-d H:i', $lessonDayStart . ' ' . $lessonStartTime);
 
         return $lessonStartDateTime ?? null;
     }
