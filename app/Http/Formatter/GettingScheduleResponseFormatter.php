@@ -22,7 +22,16 @@ class GettingScheduleResponseFormatter
                 $formattedSchedule[$dayKey][] = $this->formatLesson($lesson);
             }
         }
-        return $formattedSchedule;
+
+        $group = $schedule->getGroup();
+
+        return [
+            'schedule' => $formattedSchedule,
+            'group' => [
+                'group_id' => $group->getId(),
+                'group_name' => $group->getName(),
+            ]
+        ];
     }
 
     /**
