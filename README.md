@@ -1,3 +1,7 @@
+# Schedule API
+
+Parse schedule for SevSU university 
+
 # Lumen PHP Framework
 
 [![Build Status](https://travis-ci.org/laravel/lumen-framework.svg)](https://travis-ci.org/laravel/lumen-framework)
