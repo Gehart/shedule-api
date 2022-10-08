@@ -25,6 +25,7 @@ $router->get('/', function () use ($router) {
 
 $router->group(['middleware' => [ResponseMiddleware::class]], static function () use ($router) {
     $router->get('/health-check', HealthCheckController::class . '@check');
+    $router->get('/hello-front', HealthCheckController::class . '@hello');
 
     $router->get('/test', ScheduleLoadController::class . '@test');
 

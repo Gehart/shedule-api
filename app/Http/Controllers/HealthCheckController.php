@@ -19,4 +19,17 @@ class HealthCheckController extends Controller
 
         return 'It\'s good';
     }
+
+    /**
+     * @param Request $request
+     * @param EntityManagerInterface $entityManager
+     * @return string
+     */
+    public function test(Request $request, EntityManagerInterface $entityManager): string
+    {
+        // проверяем соединение с БД
+        $entityManager->getConnection()->connect();
+
+        return 'Hello, front';
+    }
 }
