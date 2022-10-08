@@ -1,5 +1,5 @@
 # FROM devilbox/php-fpm-8.0:latest
-FROM php:8.1.4-fpm
+FROM php:8.1-fpm
 
 # Set working directory
 WORKDIR /var/www
@@ -76,6 +76,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
 
+# RUN chmod -R ugo+rwx ./
 RUN chown -R www /var/www
 
 # Copy existing application directory permissions
